@@ -1,21 +1,52 @@
-MIT License
+PROPRIETARY LICENSE
 
-Copyright (c) 2026 Rug Munch Media LLC
+Copyright (c) 2026 Rug Munch Media LLC. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This software and associated documentation files (the "Software") are the
+exclusive property of Rug Munch Media LLC.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+RESTRICTIONS:
+
+1. No License Grant — No license or right is granted to any person under any
+   intellectual property rights of Rug Munch Media LLC, whether by estoppel,
+   implication, or otherwise.
+
+2. No Copying — You may not copy, reproduce, distribute, or create derivative
+   works of the Software without prior written permission from Rug Munch Media LLC.
+
+3. No Modification — You may not modify, adapt, alter, or translate the Software.
+
+4. No Commercial Use — You may not use the Software for any commercial purpose
+   without a separate commercial license agreement from Rug Munch Media LLC.
+
+5. No Reverse Engineering — You may not reverse engineer, decompile, disassemble,
+   or otherwise attempt to derive the source code of the Software.
+
+6. No Redistribution — You may not redistribute, sell, rent, lease, lend, or
+   sublicense the Software to any third party.
+
+PERMITTED USE:
+
+- Installation and use of the Rug Munch Intelligence MCP Server for personal,
+  non-commercial purposes, subject to the API terms of service at
+  https://rugmunch.io/terms
+
+- Commercial access is available via the x402 API at
+  https://cryptorugmunch.app/api/v1 — see pricing at https://rugmunch.io/pricing
+
+COMMERCIAL LICENSING:
+
+For commercial use, integration, or redistribution rights, contact:
+  dev@cryptorugmunch.app
+
+INFRINGEMENT:
+
+Any unauthorized use, reproduction, or distribution of this Software may
+result in civil and criminal penalties under applicable intellectual property
+laws, including but not limited to copyright law.
+
+DISCLAIMER:
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+IMPLIED. IN NO EVENT SHALL RUG MUNCH MEDIA LLC BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY ARISING FROM THE SOFTWARE.
