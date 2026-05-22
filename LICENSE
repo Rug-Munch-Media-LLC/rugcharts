@@ -1,52 +1,61 @@
-PROPRIETARY LICENSE
+# Proprietary License — All Rights Reserved
 
 Copyright (c) 2026 Rug Munch Media LLC. All rights reserved.
 
+## 1. Ownership
+
 This software and associated documentation files (the "Software") are the
-exclusive property of Rug Munch Media LLC.
+confidential and proprietary intellectual property of Rug Munch Media LLC
+("Rug Munch Media"). All title, ownership rights, and intellectual property
+rights in and to the Software shall remain with Rug Munch Media.
 
-RESTRICTIONS:
+## 2. No Grant of Rights
 
-1. No License Grant — No license or right is granted to any person under any
-   intellectual property rights of Rug Munch Media LLC, whether by estoppel,
-   implication, or otherwise.
+No rights are granted to you except as expressly set forth in a separate
+written agreement signed by Rug Munch Media. Without limiting the foregoing:
 
-2. No Copying — You may not copy, reproduce, distribute, or create derivative
-   works of the Software without prior written permission from Rug Munch Media LLC.
+(a) You may NOT copy, modify, merge, publish, distribute, sublicense, or
+    sell copies of the Software.
 
-3. No Modification — You may not modify, adapt, alter, or translate the Software.
+(b) You may NOT reverse engineer, decompile, or disassemble the Software.
 
-4. No Commercial Use — You may not use the Software for any commercial purpose
-   without a separate commercial license agreement from Rug Munch Media LLC.
+(c) You may NOT use the Software for any commercial purpose.
 
-5. No Reverse Engineering — You may not reverse engineer, decompile, disassemble,
-   or otherwise attempt to derive the source code of the Software.
+(d) You may NOT remove or alter any proprietary notices or labels on the
+    Software.
 
-6. No Redistribution — You may not redistribute, sell, rent, lease, lend, or
-   sublicense the Software to any third party.
+## 3. Limited Access
 
-PERMITTED USE:
+Access to this repository is granted solely for the purpose of collaboration
+with authorized Rug Munch Media developers. Any other access, use, or
+distribution is strictly prohibited and may result in legal action.
 
-- Installation and use of the Rug Munch Intelligence MCP Server for personal,
-  non-commercial purposes, subject to the API terms of service at
-  https://rugmunch.io/terms
+## 4. Trade Secrets
 
-- Commercial access is available via the x402 API at
-  https://cryptorugmunch.app/api/v1 — see pricing at https://rugmunch.io/pricing
+The Software contains trade secrets and confidential business information of
+Rug Munch Media. You agree to hold the Software in strict confidence and to
+take all reasonable precautions to protect its confidentiality.
 
-COMMERCIAL LICENSING:
+## 5. No Warranty
 
-For commercial use, integration, or redistribution rights, contact:
-  dev@cryptorugmunch.app
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. RUG MUNCH
+MEDIA DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, OR STATUTORY.
 
-INFRINGEMENT:
+## 6. Limitation of Liability
 
-Any unauthorized use, reproduction, or distribution of this Software may
-result in civil and criminal penalties under applicable intellectual property
-laws, including but not limited to copyright law.
+IN NO EVENT SHALL RUG MUNCH MEDIA BE LIABLE FOR ANY DAMAGES ARISING OUT OF
+OR IN CONNECTION WITH THE SOFTWARE OR THIS LICENSE.
 
-DISCLAIMER:
+## 7. Governing Law
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED. IN NO EVENT SHALL RUG MUNCH MEDIA LLC BE LIABLE FOR ANY CLAIM,
-DAMAGES, OR OTHER LIABILITY ARISING FROM THE SOFTWARE.
+This license shall be governed by the laws of the United States. Any disputes
+shall be resolved in the courts of competent jurisdiction.
+
+## 8. Contact
+
+For licensing inquiries, partnerships, or commercial access:
+- Email: biz@rugmunch.io
+- Website: https://rugmunch.io
+
+---
+*Rug Munch Media LLC — Proprietary & Confidential*
