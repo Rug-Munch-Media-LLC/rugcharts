@@ -1,6 +1,6 @@
 # RugCharts — Real-Time Token Analysis & Charting
 
-> Professional crypto charting, TA bot analysis, and live trade streaming across 7 chains. Built by Rug Munch Intelligence.
+> Professional crypto charting, TA bot analysis, and live trade streaming across 7 chains. Part of [Rug Munch Intelligence](https://rugmunch.io) — The Bloomberg Terminal of Shitcoins.
 
 <p align="center">
   <img src="https://img.shields.io/badge/chains-7-blue" />
@@ -68,7 +68,15 @@ Access RugCharts at [rugmunch.io](https://rugmunch.io) — the full RMI Command 
 
 ## Part of Rug Munch Intelligence
 
-RugCharts is a premium feature of the [Rug Munch Intelligence MCP](https://github.com/Rug-Munch-Media-LLC/rug-munch-intelligence-mcp) platform.
+RugCharts is part of the [Rug Munch Intelligence](https://rugmunch.io) platform — The Bloomberg Terminal of Shitcoins.
+
+- **Web Terminal** — [rugmunch.io](https://rugmunch.io)
+- **MCP Server** — 221 tools for AI agents via `pip install rug-munch-intelligence-mcp`
+- **Token Scanner** — Multi-chain contract audit & rug pull detection
+- **Wallet Scanner** — Wallet forensics & behavioral profiling
+- **RugMaps** — Interactive scam network visualization
+- **x402 Marketplace** — Pay-per-call for humans & AI agents
+- **Telegram Bot** — [@rugmunchbot](https://t.me/rugmunchbot)
 
 **We are building scam detection tools to keep retail investors and the broader crypto space safe from scams and scammers. The Bloomberg of Shitcoins — terminal ultimate edition.**
 
