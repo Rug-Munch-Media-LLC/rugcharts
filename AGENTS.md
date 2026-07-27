@@ -19,8 +19,8 @@ rugcharts — orphaned component. See TRIAGE.md for disposition.
 
 ## Built With
 - Standards: [github.com/RugMunchMedia/standards](https://github.com/RugMunchMedia/standards)
-- Toolchain: [TOOLCHAIN.md](https://github.com/RugMunchMedia/standards/raw/main/TOOLCHAIN.md)
-- Conventions: [CONVENTIONS.md](https://github.com/RugMunchMedia/standards/raw/main/CONVENTIONS.md)
+- Toolchain: See README.md for development toolchain
+- Conventions: See CONTRIBUTING.md for coding conventions
 
 ## 🚨 CRITICAL RULES
 
@@ -45,7 +45,7 @@ See [TRIAGE.md](TRIAGE.md) for the disposition decision.
 
 ## Related Repos
 - `rmi-backend/` — canonical destination for merged code
-- [standards/PRODUCTS.md](https://github.com/RugMunchMedia/standards/raw/main/PRODUCTS.md)
+- See product documentation for available products
 
 ## Open-Core Protection
 
