@@ -1,50 +1,140 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Rug Munch Media LLC
 name: CI
 
 on:
   push:
-    branches: [main, wip/*]
+    branches: [main]
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install ruff
-        run: pip install ruff
-      - name: Ruff check
-        run: ruff check backend/ --exit-non-zero-on-fix
-      - name: Ruff format check
-        run: ruff format --check backend/
-
-  test:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install deps
-        run: |
-          pip install -e ".[dev]" 2>/dev/null || pip install pytest ruff
-      - name: Run pytest
-        run: pytest tests/ -x -q || echo "no tests yet"
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Docker build
-        run: docker build -t rugcharts . || echo "Docker build skipped (no Docker daemon)"
-
-  security:
-    runs-on: ubuntu-latest
+  # ─── Commit Convention ───────────────────────────────────────────────
+  commitlint:
+    runs-on: docker-x64
+    container:
+      image: node:22-bookworm-slim
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Gitleaks scan
+      - name: Install commitlint
         run: |
+          npm install -g @commitlint/cli @commitlint/config-conventional
+      - name: Validate all commits in PR
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git log --format="%H %s" origin/main..HEAD | while read hash msg; do
+              echo "$hash $msg" | commitlint --from="$hash^" --to="$hash" || exit 1
+            done
+          else
+            npx commitlint --from=HEAD~1 --to=HEAD 2>/dev/null || echo "Single commit push — commitlint skipped (no parent)"
+          fi
+
+  # ─── Lint (Biome) ────────────────────────────────────────────────────
+  lint:
+    runs-on: docker-x64
+    container:
+      image: node:22-bookworm-slim
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+      - name: Biome lint
+        run: npx @biomejs/biome lint src/
+
+  # ─── Type Check ──────────────────────────────────────────────────────
+  typecheck:
+    runs-on: docker-x64
+    container:
+      image: node:22-bookworm-slim
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+  # ─── Test (Vitest) ───────────────────────────────────────────────────
+  test:
+    runs-on: docker-x64
+    container:
+      image: node:22-bookworm-slim
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+      - name: Run tests
+        run: npx vitest run
+
+  # ─── Build ───────────────────────────────────────────────────────────
+  build:
+    runs-on: docker-x64
+    container:
+      image: node:22-bookworm-slim
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Install dependencies
+        run: npm ci --frozen-lockfile
+      - name: Build
+        run: npm run build
+
+  # ─── Security (Gitleaks) ─────────────────────────────────────────────
+  security:
+    runs-on: docker-x64
+    container:
+      image: node:22-bookworm-slim
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
           curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.0/gitleaks_8.24.0_linux_x64.tar.gz | tar -xz -C /usr/local/bin gitleaks
-          gitleaks detect --source . --no-banner
+      - name: Gitleaks scan
+        run: gitleaks detect --source . --no-banner
