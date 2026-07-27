@@ -14,19 +14,19 @@ rugcharts — orphaned component. See TRIAGE.md for disposition.
 `orphan` · decision=MERGE → `rmi-backend` then ARCHIVE
 
 ## Where It Lives
-- Source: `https://git.rugmunch.io/RugMunchMedia/rugcharts`
-- Deployed: none (no live deployment)
+- Source: `https://github.com/RugMunchMedia/rugcharts`
+- Status: no live deployment (orphaned, merging into rmi-backend)
 
 ## Built With
-- Standards: [git.rugmunch.io/RugMunchMedia/standards](https://git.rugmunch.io/RugMunchMedia/standards)
-- Toolchain: [TOOLCHAIN.md](https://git.rugmunch.io/RugMunchMedia/standards/raw/branch/main/TOOLCHAIN.md)
-- Conventions: [CONVENTIONS.md](https://git.rugmunch.io/RugMunchMedia/standards/raw/branch/main/CONVENTIONS.md)
+- Standards: [github.com/RugMunchMedia/standards](https://github.com/RugMunchMedia/standards)
+- Toolchain: [TOOLCHAIN.md](https://github.com/RugMunchMedia/standards/raw/main/TOOLCHAIN.md)
+- Conventions: [CONVENTIONS.md](https://github.com/RugMunchMedia/standards/raw/main/CONVENTIONS.md)
 
 ## 🚨 CRITICAL RULES
 
 1. **No new features.** This repo is on a merge-and-archive track. Add nothing that isn't a fix or a docs improvement.
 2. **No nested repos.** Don't commit other complete project trees inside this one.
-3. **No secrets.** Never commit `.secrets/`, `.env`, `*.pem`, `*.key`, `*.crt`. Use gopass.
+3. **No secrets.** Never commit `.secrets/`, `.env`, `*.pem`, `*.key`, `*.crt`.
 4. **No data blobs.** Don't commit `*.zip`, `*.parquet`, model weights, sqlite files.
 5. **Coordinate merges with rmi-backend.** When the merge happens, this repo will be archived on Forgejo.
 6. **Read TRIAGE.md before doing anything non-trivial.** The decision is final unless escalated.
@@ -45,4 +45,14 @@ See [TRIAGE.md](TRIAGE.md) for the disposition decision.
 
 ## Related Repos
 - `rmi-backend/` — canonical destination for merged code
-- See [standards/PRODUCTS.md](https://git.rugmunch.io/RugMunchMedia/standards/raw/branch/main/PRODUCTS.md).
+- [standards/PRODUCTS.md](https://github.com/RugMunchMedia/standards/raw/main/PRODUCTS.md)
+
+## Open-Core Protection
+
+This repo is open source (MIT) and on a merge-and-archive track. The code
+here demonstrates charting patterns — it is NOT the complete RugMunch
+production charting infrastructure. The managed platform at rugmunch.io
+includes proprietary enhancements.
+
+See [METHODOLOGY-PROTECTION.md](https://github.com/RugMunchMedia/standards/blob/main/METHODOLOGY-PROTECTION.md)
+for details on what information belongs in public vs private repos.
