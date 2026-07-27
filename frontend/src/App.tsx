@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import AISignals from './components/rugcharts/AISignals'
 import LiveTradeTape from './components/rugcharts/LiveTradeTape'
 import MultiChainCompare from './components/rugcharts/MultiChainCompare'
+import RugChartsPluginViewer from './components/rugcharts/PluginViewer'
 import RugPullWarning from './components/rugcharts/RugPullWarning'
 import ScamRiskMeter from './components/rugcharts/ScamRiskMeter'
-import RugChartsPluginViewer from './components/rugcharts/PluginViewer'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,9 +46,24 @@ export default function App() {
                 chain={DEMO_CHAIN}
                 tokenAddress={DEMO_TOKEN}
                 riskFactors={[
-                  { category: 'liquidity', severity: 'low', title: 'LP Locked', description: 'Liquidity is locked for 12 months' },
-                  { category: 'contract', severity: 'medium', title: 'Mint Enabled', description: 'Owner can mint new tokens (not renounced)' },
-                  { category: 'holder', severity: 'low', title: 'Distribution', description: 'Top 10 hold 8.2% — healthy' },
+                  {
+                    category: 'liquidity',
+                    severity: 'low',
+                    title: 'LP Locked',
+                    description: 'Liquidity is locked for 12 months',
+                  },
+                  {
+                    category: 'contract',
+                    severity: 'medium',
+                    title: 'Mint Enabled',
+                    description: 'Owner can mint new tokens (not renounced)',
+                  },
+                  {
+                    category: 'holder',
+                    severity: 'low',
+                    title: 'Distribution',
+                    description: 'Top 10 hold 8.2% — healthy',
+                  },
                 ]}
               />
               <RugPullWarning
@@ -70,11 +85,7 @@ export default function App() {
             </div>
 
             {/* Live Trade Tape */}
-            <LiveTradeTape
-              chain={DEMO_CHAIN}
-              tokenAddress={DEMO_TOKEN}
-              initialTrades={[]}
-            />
+            <LiveTradeTape chain={DEMO_CHAIN} tokenAddress={DEMO_TOKEN} initialTrades={[]} />
 
             {/* AI Signals + Plugin Viewer */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -86,13 +97,14 @@ export default function App() {
                     id: 's1',
                     type: 'buy',
                     timestamp: Date.now() / 1000 - 3600,
-                    price_at_signal: 142.50,
+                    price_at_signal: 142.5,
                     confidence: 78,
                     title: 'Accumulation Pattern',
-                    reasoning: 'Multiple large buys from fresh wallets after consolidation at support. RSI divergence confirms.',
+                    reasoning:
+                      'Multiple large buys from fresh wallets after consolidation at support. RSI divergence confirms.',
                     indicators: ['RSI Divergence', 'Volume Spike', 'Support Hold'],
-                    target_price: 185.00,
-                    stop_loss: 128.00,
+                    target_price: 185.0,
+                    stop_loss: 128.0,
                     timeframe: '4h',
                     outcome: 'pending',
                   },
@@ -100,10 +112,11 @@ export default function App() {
                     id: 's2',
                     type: 'warning',
                     timestamp: Date.now() / 1000 - 7200,
-                    price_at_signal: 138.20,
+                    price_at_signal: 138.2,
                     confidence: 82,
                     title: 'Cluster Sell Pressure',
-                    reasoning: 'Bundled wallets showing coordinated distribution pattern. 12 wallets funded from same source.',
+                    reasoning:
+                      'Bundled wallets showing coordinated distribution pattern. 12 wallets funded from same source.',
                     indicators: ['Bundle Detection', 'Cluster Analysis'],
                     outcome: 'hit',
                   },
@@ -122,7 +135,7 @@ export default function App() {
                   address: 'So11111111111111111111111111111111111111112',
                   symbol: 'SOL',
                   name: 'Wrapped SOL',
-                  price_usd: 142.50,
+                  price_usd: 142.5,
                   price_change_24h: 5.2,
                   volume_24h: 245000000,
                   liquidity_usd: 12500000,
@@ -137,7 +150,7 @@ export default function App() {
                   address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
                   symbol: 'WETH',
                   name: 'Wrapped Ether',
-                  price_usd: 3320.40,
+                  price_usd: 3320.4,
                   price_change_24h: -1.8,
                   volume_24h: 890000000,
                   liquidity_usd: 45000000,

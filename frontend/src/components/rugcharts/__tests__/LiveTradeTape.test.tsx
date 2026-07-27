@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
 import LiveTradeTape from '../LiveTradeTape'
 
 describe('LiveTradeTape', () => {
@@ -30,11 +30,7 @@ describe('LiveTradeTape', () => {
 
   it('shows waiting state when empty', () => {
     render(
-      <LiveTradeTape
-        chain="solana"
-        tokenAddress="So11111111111111111111111111111111111111112"
-        initialTrades={[]}
-      />,
+      <LiveTradeTape chain="solana" tokenAddress="So11111111111111111111111111111111111111112" initialTrades={[]} />,
     )
 
     expect(screen.getByText('Waiting for trades...')).toBeInTheDocument()

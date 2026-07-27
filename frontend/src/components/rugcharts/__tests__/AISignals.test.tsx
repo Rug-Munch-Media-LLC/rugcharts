@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
 import AISignals from '../AISignals'
 
 describe('AISignals', () => {
@@ -33,13 +33,7 @@ describe('AISignals', () => {
   })
 
   it('shows loading state when no signals provided', () => {
-    render(
-      <AISignals
-        chain="solana"
-        tokenAddress="So11111111111111111111111111111111111111112"
-        initialSignals={[]}
-      />,
-    )
+    render(<AISignals chain="solana" tokenAddress="So11111111111111111111111111111111111111112" initialSignals={[]} />)
 
     expect(screen.getByText('AI Trade Signals')).toBeInTheDocument()
   })

@@ -1,41 +1,74 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Skull, AlertOctagon, Activity, TrendingDown, Users, Droplet, Lock, Eye, Zap, ChevronRight, RefreshCw } from 'lucide-react';
+import {
+  Activity,
+  AlertOctagon,
+  ChevronRight,
+  Droplet,
+  Eye,
+  Lock,
+  RefreshCw,
+  Skull,
+  TrendingDown,
+  Users,
+  Zap,
+} from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
 export interface RugWarning {
-  id: string;
-  level: 'CAUTION' | 'WARNING' | 'CRITICAL' | 'PULLING';
-  category: 'liquidity' | 'holder' | 'trading' | 'deployer' | 'contract' | 'social';
-  title: string;
-  description: string;
-  evidence?: string;
-  confidence: number;
-  detected_at: number;
-  time_to_estimated_pull?: string;
-  recommended_action?: string;
+  id: string
+  level: 'CAUTION' | 'WARNING' | 'CRITICAL' | 'PULLING'
+  category: 'liquidity' | 'holder' | 'trading' | 'deployer' | 'contract' | 'social'
+  title: string
+  description: string
+  evidence?: string
+  confidence: number
+  detected_at: number
+  time_to_estimated_pull?: string
+  recommended_action?: string
 }
 
 interface RugPullWarningProps {
-  chain: string;
-  tokenAddress: string;
-  initialWarnings?: RugWarning[];
-  className?: string;
+  chain: string
+  tokenAddress: string
+  initialWarnings?: RugWarning[]
+  className?: string
 }
 
-const LEVEL_META: Record<RugWarning['level'], { color: string; bg: string; border: string; label: string; pulse: boolean }> = {
-  CAUTION:  { color: '#FFB800', bg: 'rgba(255,184,0,0.08)',   border: 'rgba(255,184,0,0.3)',   label: 'CAUTION',  pulse: false },
-  WARNING:  { color: '#FF8C42', bg: 'rgba(255,140,66,0.1)',   border: 'rgba(255,140,66,0.4)',  label: 'WARNING',  pulse: false },
-  CRITICAL: { color: '#FF3366', bg: 'rgba(255,51,102,0.12)', border: 'rgba(255,51,102,0.5)',  label: 'CRITICAL', pulse: true  },
-  PULLING:  { color: '#FF0040', bg: 'rgba(255,0,64,0.2)',    border: 'rgba(255,0,64,0.7)',    label: 'PULLING',  pulse: true  },
-};
+const LEVEL_META: Record<
+  RugWarning['level'],
+  { color: string; bg: string; border: string; label: string; pulse: boolean }
+> = {
+  CAUTION: {
+    color: '#FFB800',
+    bg: 'rgba(255,184,0,0.08)',
+    border: 'rgba(255,184,0,0.3)',
+    label: 'CAUTION',
+    pulse: false,
+  },
+  WARNING: {
+    color: '#FF8C42',
+    bg: 'rgba(255,140,66,0.1)',
+    border: 'rgba(255,140,66,0.4)',
+    label: 'WARNING',
+    pulse: false,
+  },
+  CRITICAL: {
+    color: '#FF3366',
+    bg: 'rgba(255,51,102,0.12)',
+    border: 'rgba(255,51,102,0.5)',
+    label: 'CRITICAL',
+    pulse: true,
+  },
+  PULLING: { color: '#FF0040', bg: 'rgba(255,0,64,0.2)', border: 'rgba(255,0,64,0.7)', label: 'PULLING', pulse: true },
+}
 
 const CATEGORY_META: Record<RugWarning['category'], { icon: any; label: string }> = {
-  liquidity: { icon: Droplet,       label: 'Liquidity' },
-  holder:    { icon: Users,         label: 'Holders' },
-  trading:   { icon: Activity,      label: 'Trading' },
-  deployer:  { icon: Skull,         label: 'Deployer' },
-  contract:  { icon: Lock,          label: 'Contract' },
-  social:    { icon: Eye,           label: 'Social' },
-};
+  liquidity: { icon: Droplet, label: 'Liquidity' },
+  holder: { icon: Users, label: 'Holders' },
+  trading: { icon: Activity, label: 'Trading' },
+  deployer: { icon: Skull, label: 'Deployer' },
+  contract: { icon: Lock, label: 'Contract' },
+  social: { icon: Eye, label: 'Social' },
+}
 
 // Pattern signatures that precede rug pulls
 const RUG_SIGNATURES = [
@@ -45,102 +78,106 @@ const RUG_SIGNATURES = [
   { pattern: 'contract_not_renounced', keywords: ['not renounced', 'ownership not renounced'], weight: 20 },
   { pattern: 'honeypot_detected', keywords: ['honeypot', 'cant sell', 'sell disabled'], weight: 40 },
   { pattern: 'lp_can_be_removed', keywords: ['LP not locked', 'owner can remove LP'], weight: 25 },
-];
+]
 
 function classifyPattern(text: string): string | null {
-  const lower = text.toLowerCase();
+  const lower = text.toLowerCase()
   for (const sig of RUG_SIGNATURES) {
-    if (sig.keywords.some(k => lower.includes(k.toLowerCase()))) {
-      return sig.pattern;
+    if (sig.keywords.some((k) => lower.includes(k.toLowerCase()))) {
+      return sig.pattern
     }
   }
-  return null;
+  return null
 }
 
 function formatTimeAgo(ts: number): string {
-  const diff = Date.now() / 1000 - ts;
-  if (diff < 60) return `${Math.floor(diff)}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  const diff = Date.now() / 1000 - ts
+  if (diff < 60) return `${Math.floor(diff)}s ago`
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
 }
 
 export default function RugPullWarning({ chain, tokenAddress, initialWarnings, className = '' }: RugPullWarningProps) {
-  const [warnings, setWarnings] = useState<RugWarning[]>(initialWarnings || []);
-  const [loading, setLoading] = useState(!initialWarnings);
-  const [scanning, setScanning] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [warnings, setWarnings] = useState<RugWarning[]>(initialWarnings || [])
+  const [loading, setLoading] = useState(!initialWarnings)
+  const [scanning, setScanning] = useState(false)
+  const [_expanded, _setExpanded] = useState(false)
 
   const runScan = async () => {
-    setScanning(true);
+    setScanning(true)
     try {
-      const res = await fetch(`/api/v1/rugmaps/rug-warning?chain=${chain}&token=${encodeURIComponent(tokenAddress)}`);
+      const res = await fetch(`/api/v1/rugmaps/rug-warning?chain=${chain}&token=${encodeURIComponent(tokenAddress)}`)
       if (res.ok) {
-        const data = await res.json();
-        const raw = data.warnings || data.alerts || data.flags || [];
-        setWarnings(raw.map((w: any, i: number) => ({
-          id: w.id || String(i),
-          level: w.level || w.severity?.toUpperCase() || 'CAUTION',
-          category: w.category || w.type || 'trading',
-          title: w.title || w.summary || '',
-          description: w.description || w.detail || '',
-          evidence: w.evidence,
-          confidence: Number(w.confidence || w.score || 50),
-          detected_at: Number(w.detected_at || w.timestamp || Date.now() / 1000),
-          time_to_estimated_pull: w.time_to_estimated_pull || w.eta,
-          recommended_action: w.recommended_action || w.recommendation,
-        })));
+        const data = await res.json()
+        const raw = data.warnings || data.alerts || data.flags || []
+        setWarnings(
+          raw.map((w: any, i: number) => ({
+            id: w.id || String(i),
+            level: w.level || w.severity?.toUpperCase() || 'CAUTION',
+            category: w.category || w.type || 'trading',
+            title: w.title || w.summary || '',
+            description: w.description || w.detail || '',
+            evidence: w.evidence,
+            confidence: Number(w.confidence || w.score || 50),
+            detected_at: Number(w.detected_at || w.timestamp || Date.now() / 1000),
+            time_to_estimated_pull: w.time_to_estimated_pull || w.eta,
+            recommended_action: w.recommended_action || w.recommendation,
+          })),
+        )
       }
     } catch (e) {
-      console.error('[RugPullWarning] scan failed:', e);
+      console.error('[RugPullWarning] scan failed:', e)
     } finally {
-      setScanning(false);
-      setLoading(false);
+      setScanning(false)
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     if (initialWarnings) {
-      setWarnings(initialWarnings);
-      setLoading(false);
-      return;
+      setWarnings(initialWarnings)
+      setLoading(false)
+      return
     }
-    runScan();
+    runScan()
     // Auto-refresh every 30s for active warnings
-    const interval = setInterval(runScan, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(runScan, 30000)
+    return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chain, tokenAddress, initialWarnings]);
+  }, [initialWarnings, runScan])
 
   // Aggregate stats
   const stats = useMemo(() => {
-    const byLevel: Record<string, number> = {};
-    const byCategory: Record<string, number> = {};
+    const byLevel: Record<string, number> = {}
+    const byCategory: Record<string, number> = {}
     for (const w of warnings) {
-      byLevel[w.level] = (byLevel[w.level] || 0) + 1;
-      byCategory[w.category] = (byCategory[w.category] || 0) + 1;
+      byLevel[w.level] = (byLevel[w.level] || 0) + 1
+      byCategory[w.category] = (byCategory[w.category] || 0) + 1
     }
     const overallRisk = warnings.reduce((s, w) => {
-      const w8 = w.level === 'CRITICAL' || w.level === 'PULLING' ? 30 : w.level === 'WARNING' ? 15 : 5;
-      return s + w8 * (w.confidence / 100);
-    }, 0);
-    return { byLevel, byCategory, overallRisk: Math.min(100, overallRisk) };
-  }, [warnings]);
+      const w8 = w.level === 'CRITICAL' || w.level === 'PULLING' ? 30 : w.level === 'WARNING' ? 15 : 5
+      return s + w8 * (w.confidence / 100)
+    }, 0)
+    return { byLevel, byCategory, overallRisk: Math.min(100, overallRisk) }
+  }, [warnings])
 
   const verdict = useMemo(() => {
-    if (stats.overallRisk >= 60) return { color: '#FF0040', label: 'PULL IMMINENT', icon: Skull };
-    if (stats.overallRisk >= 30) return { color: '#FF3366', label: 'CRITICAL RISK', icon: AlertOctagon };
-    if (stats.overallRisk >= 15) return { color: '#FF8C42', label: 'HIGH RISK', icon: TrendingDown };
-    return { color: '#06D6A0', label: 'NO IMMEDIATE THREAT', icon: Activity };
-  }, [stats]);
+    if (stats.overallRisk >= 60) return { color: '#FF0040', label: 'PULL IMMINENT', icon: Skull }
+    if (stats.overallRisk >= 30) return { color: '#FF3366', label: 'CRITICAL RISK', icon: AlertOctagon }
+    if (stats.overallRisk >= 15) return { color: '#FF8C42', label: 'HIGH RISK', icon: TrendingDown }
+    return { color: '#06D6A0', label: 'NO IMMEDIATE THREAT', icon: Activity }
+  }, [stats])
 
-  const VerdictIcon = verdict.icon;
-  const isActivelyWarning = warnings.some(w => w.level === 'CRITICAL' || w.level === 'PULLING');
+  const VerdictIcon = verdict.icon
+  const isActivelyWarning = warnings.some((w) => w.level === 'CRITICAL' || w.level === 'PULLING')
 
   return (
-    <div className={`bg-[#0a0a0f] border rounded-xl overflow-hidden ${
-      isActivelyWarning ? 'border-[rgba(255,51,102,0.4)] animate-pulse' : 'border-[rgba(139,92,246,0.15)]'
-    } ${className}`}>
+    <div
+      className={`bg-[#0a0a0f] border rounded-xl overflow-hidden ${
+        isActivelyWarning ? 'border-[rgba(255,51,102,0.4)] animate-pulse' : 'border-[rgba(139,92,246,0.15)]'
+      } ${className}`}
+    >
       {/* Header */}
       <div
         className="px-4 py-3 border-b border-[rgba(139,92,246,0.15)]"
@@ -154,7 +191,8 @@ export default function RugPullWarning({ chain, tokenAddress, initialWarnings, c
                 {verdict.label}
               </div>
               <p className="text-[10px] text-[#5C6080] mt-0.5">
-                Risk: {stats.overallRisk.toFixed(0)}/100 · {warnings.length} warning{warnings.length !== 1 ? 's' : ''} detected
+                Risk: {stats.overallRisk.toFixed(0)}/100 · {warnings.length} warning{warnings.length !== 1 ? 's' : ''}{' '}
+                detected
               </p>
             </div>
           </div>
@@ -183,14 +221,17 @@ export default function RugPullWarning({ chain, tokenAddress, initialWarnings, c
         {Object.keys(stats.byCategory).length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {Object.entries(stats.byCategory).map(([cat, count]) => {
-              const meta = CATEGORY_META[cat as RugWarning['category']];
-              const Icon = meta.icon;
+              const meta = CATEGORY_META[cat as RugWarning['category']]
+              const Icon = meta.icon
               return (
-                <span key={cat} className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-[rgba(139,92,246,0.08)] text-[#8B5CF6]">
+                <span
+                  key={cat}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-[rgba(139,92,246,0.08)] text-[#8B5CF6]"
+                >
                   <Icon className="w-2.5 h-2.5" />
                   {meta.label}: {count}
                 </span>
-              );
+              )
             })}
           </div>
         )}
@@ -211,14 +252,14 @@ export default function RugPullWarning({ chain, tokenAddress, initialWarnings, c
         <div className="max-h-[500px] overflow-y-auto">
           {warnings
             .sort((a, b) => {
-              const order = { CRITICAL: 0, PULLING: 1, WARNING: 2, CAUTION: 3 };
-              return (order[a.level] - order[b.level]) || (b.confidence - a.confidence);
+              const order = { CRITICAL: 0, PULLING: 1, WARNING: 2, CAUTION: 3 }
+              return order[a.level] - order[b.level] || b.confidence - a.confidence
             })
-            .map(w => {
-              const meta = LEVEL_META[w.level];
-              const catMeta = CATEGORY_META[w.category];
-              const Icon = catMeta.icon;
-              const pattern = classifyPattern(w.title + ' ' + w.description);
+            .map((w) => {
+              const meta = LEVEL_META[w.level]
+              const catMeta = CATEGORY_META[w.category]
+              const Icon = catMeta.icon
+              const pattern = classifyPattern(`${w.title} ${w.description}`)
               return (
                 <div
                   key={w.id}
@@ -237,13 +278,16 @@ export default function RugPullWarning({ chain, tokenAddress, initialWarnings, c
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
-                          style={{ color: meta.color, background: meta.bg, borderColor: meta.border, border: '1px solid' }}
+                          style={{
+                            color: meta.color,
+                            background: meta.bg,
+                            borderColor: meta.border,
+                            border: '1px solid',
+                          }}
                         >
                           {meta.label}
                         </span>
-                        <span className="text-[10px] text-[#5C6080] uppercase tracking-wider">
-                          {catMeta.label}
-                        </span>
+                        <span className="text-[10px] text-[#5C6080] uppercase tracking-wider">{catMeta.label}</span>
                         {w.time_to_estimated_pull && (
                           <span className="text-[10px] text-[#FF3366] font-bold uppercase tracking-wider flex items-center gap-0.5">
                             <Zap className="w-2.5 h-2.5" />
@@ -277,12 +321,14 @@ export default function RugPullWarning({ chain, tokenAddress, initialWarnings, c
 
                     <div className="text-right flex-shrink-0">
                       <div className="text-[9px] text-[#5C6080] uppercase">Conf</div>
-                      <div className="text-base font-bold" style={{ color: meta.color }}>{w.confidence}%</div>
+                      <div className="text-base font-bold" style={{ color: meta.color }}>
+                        {w.confidence}%
+                      </div>
                       <div className="text-[9px] text-[#5C6080] mt-1">{formatTimeAgo(w.detected_at)}</div>
                     </div>
                   </div>
                 </div>
-              );
+              )
             })}
         </div>
       )}
@@ -294,5 +340,5 @@ export default function RugPullWarning({ chain, tokenAddress, initialWarnings, c
         }
       `}</style>
     </div>
-  );
+  )
 }

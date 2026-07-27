@@ -1,20 +1,31 @@
-import { useState, useEffect } from 'react';
-import { Shield, ShieldAlert, ShieldX, AlertTriangle, TrendingDown, Users, Droplet, Lock, Activity, ExternalLink } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  Droplet,
+  ExternalLink,
+  Lock,
+  Shield,
+  ShieldAlert,
+  ShieldX,
+  TrendingDown,
+  Users,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export interface RiskFactor {
-  category: 'concentration' | 'liquidity' | 'contract' | 'social' | 'deployer' | 'trading' | 'holder';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  evidence?: string;
+  category: 'concentration' | 'liquidity' | 'contract' | 'social' | 'deployer' | 'trading' | 'holder'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  title: string
+  description: string
+  evidence?: string
 }
 
 interface ScamRiskMeterProps {
-  chain: string;
-  tokenAddress: string;
-  riskScore?: number;  // 0-100, optional override
-  riskFactors?: RiskFactor[];
-  className?: string;
+  chain: string
+  tokenAddress: string
+  riskScore?: number // 0-100, optional override
+  riskFactors?: RiskFactor[]
+  className?: string
 }
 
 const SEVERITY_COLORS: Record<RiskFactor['severity'], string> = {
@@ -22,44 +33,50 @@ const SEVERITY_COLORS: Record<RiskFactor['severity'], string> = {
   medium: '#FFB800',
   high: '#FF8C42',
   critical: '#FF3366',
-};
+}
 
 const SEVERITY_WEIGHTS: Record<RiskFactor['severity'], number> = {
   low: 5,
   medium: 15,
   high: 30,
   critical: 50,
-};
+}
 
 function computeScore(factors: RiskFactor[]): number {
-  return Math.min(100, factors.reduce((s, f) => s + SEVERITY_WEIGHTS[f.severity], 0));
+  return Math.min(
+    100,
+    factors.reduce((s, f) => s + SEVERITY_WEIGHTS[f.severity], 0),
+  )
 }
 
 function getVerdict(score: number): { label: string; color: string; icon: any; description: string } {
-  if (score >= 80) return {
-    label: 'CRITICAL RISK',
-    color: '#FF3366',
-    icon: ShieldX,
-    description: 'Multiple severe red flags detected. Likely scam or rug-pull.',
-  };
-  if (score >= 60) return {
-    label: 'HIGH RISK',
-    color: '#FF8C42',
-    icon: ShieldAlert,
-    description: 'Significant concerns. Exercise extreme caution.',
-  };
-  if (score >= 30) return {
-    label: 'MODERATE RISK',
-    color: '#FFB800',
-    icon: Shield,
-    description: 'Some concerning signals. Do your own research.',
-  };
+  if (score >= 80)
+    return {
+      label: 'CRITICAL RISK',
+      color: '#FF3366',
+      icon: ShieldX,
+      description: 'Multiple severe red flags detected. Likely scam or rug-pull.',
+    }
+  if (score >= 60)
+    return {
+      label: 'HIGH RISK',
+      color: '#FF8C42',
+      icon: ShieldAlert,
+      description: 'Significant concerns. Exercise extreme caution.',
+    }
+  if (score >= 30)
+    return {
+      label: 'MODERATE RISK',
+      color: '#FFB800',
+      icon: Shield,
+      description: 'Some concerning signals. Do your own research.',
+    }
   return {
     label: 'LOW RISK',
     color: '#06D6A0',
     icon: Shield,
     description: 'No major red flags detected.',
-  };
+  }
 }
 
 const CATEGORY_ICONS: Record<RiskFactor['category'], any> = {
@@ -70,7 +87,7 @@ const CATEGORY_ICONS: Record<RiskFactor['category'], any> = {
   deployer: AlertTriangle,
   trading: TrendingDown,
   holder: Users,
-};
+}
 
 const CATEGORY_LABELS: Record<RiskFactor['category'], string> = {
   concentration: 'Concentration',
@@ -80,28 +97,34 @@ const CATEGORY_LABELS: Record<RiskFactor['category'], string> = {
   deployer: 'Deployer',
   trading: 'Trading',
   holder: 'Holders',
-};
+}
 
-export default function ScamRiskMeter({ chain, tokenAddress, riskScore: providedScore, riskFactors: providedFactors, className = '' }: ScamRiskMeterProps) {
-  const [factors, setFactors] = useState<RiskFactor[]>(providedFactors || []);
-  const [loading, setLoading] = useState(!providedFactors);
-  const [expanded, setExpanded] = useState(false);
+export default function ScamRiskMeter({
+  chain,
+  tokenAddress,
+  riskScore: providedScore,
+  riskFactors: providedFactors,
+  className = '',
+}: ScamRiskMeterProps) {
+  const [factors, setFactors] = useState<RiskFactor[]>(providedFactors || [])
+  const [loading, setLoading] = useState(!providedFactors)
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     if (providedFactors) {
-      setFactors(providedFactors);
-      setLoading(false);
-      return;
+      setFactors(providedFactors)
+      setLoading(false)
+      return
     }
     // Fetch from backend
     const fetchRisk = async () => {
       try {
-        const res = await fetch(`/api/v1/rugmaps/scan?token=${encodeURIComponent(tokenAddress)}&chain=${chain}`);
+        const res = await fetch(`/api/v1/rugmaps/scan?token=${encodeURIComponent(tokenAddress)}&chain=${chain}`)
         if (res.ok) {
-          const data = await res.json();
+          const data = await res.json()
           // Map backend flags to RiskFactor[]
-          const newFactors: RiskFactor[] = [];
-          const flags = data.red_flags || data.flags || [];
+          const newFactors: RiskFactor[] = []
+          const flags = data.red_flags || data.flags || []
           for (const flag of flags) {
             newFactors.push({
               category: flag.category || 'trading',
@@ -109,31 +132,36 @@ export default function ScamRiskMeter({ chain, tokenAddress, riskScore: provided
               title: flag.title || String(flag),
               description: flag.description || '',
               evidence: flag.evidence,
-            });
+            })
           }
-          setFactors(newFactors);
+          setFactors(newFactors)
         }
       } catch (e) {
-        console.error('[ScamRiskMeter] fetch failed:', e);
+        console.error('[ScamRiskMeter] fetch failed:', e)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchRisk();
-  }, [chain, tokenAddress, providedFactors]);
+    }
+    fetchRisk()
+  }, [chain, tokenAddress, providedFactors])
 
-  const score = providedScore ?? computeScore(factors);
-  const verdict = getVerdict(score);
-  const VerdictIcon = verdict.icon;
+  const score = providedScore ?? computeScore(factors)
+  const verdict = getVerdict(score)
+  const VerdictIcon = verdict.icon
 
   // Group factors by category for display
-  const byCategory = factors.reduce((acc, f) => {
-    (acc[f.category] = acc[f.category] || []).push(f);
-    return acc;
-  }, {} as Record<string, RiskFactor[]>);
+  const byCategory = factors.reduce((acc: Record<string, RiskFactor[]>, f) => {
+    if (!acc[f.category]) {
+      acc[f.category] = []
+    }
+    acc[f.category].push(f)
+    return acc
+  }, {})
 
   return (
-    <div className={`bg-gradient-to-b from-[#0a0a0f] to-[#0f0f17] border border-[rgba(255,51,102,0.2)] rounded-xl overflow-hidden ${className}`}>
+    <div
+      className={`bg-gradient-to-b from-[#0a0a0f] to-[#0f0f17] border border-[rgba(255,51,102,0.2)] rounded-xl overflow-hidden ${className}`}
+    >
       {/* Top: Score arc + verdict */}
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
@@ -155,7 +183,9 @@ export default function ScamRiskMeter({ chain, tokenAddress, riskScore: provided
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="42" stroke="rgba(139,92,246,0.1)" strokeWidth="8" fill="none" />
               <circle
-                cx="50" cy="50" r="42"
+                cx="50"
+                cy="50"
+                r="42"
                 stroke={verdict.color}
                 strokeWidth="8"
                 fill="none"
@@ -165,7 +195,9 @@ export default function ScamRiskMeter({ chain, tokenAddress, riskScore: provided
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-2xl font-bold" style={{ color: verdict.color }}>{score}</div>
+              <div className="text-2xl font-bold" style={{ color: verdict.color }}>
+                {score}
+              </div>
               <div className="text-[9px] text-[#5C6080] uppercase tracking-wider">/ 100</div>
             </div>
           </div>
@@ -190,7 +222,7 @@ export default function ScamRiskMeter({ chain, tokenAddress, riskScore: provided
       {!loading && factors.length > 0 && (
         <div className="border-t border-[rgba(139,92,246,0.1)]">
           <button
-            onClick={() => setExpanded(e => !e)}
+            onClick={() => setExpanded((e) => !e)}
             className="w-full px-4 py-2 flex items-center justify-between hover:bg-[rgba(139,92,246,0.04)] transition-colors"
           >
             <span className="text-[11px] uppercase tracking-wider text-[#F1F1F6] font-semibold">
@@ -205,8 +237,8 @@ export default function ScamRiskMeter({ chain, tokenAddress, riskScore: provided
                 <div key={cat} className="space-y-1">
                   <div className="text-[10px] uppercase tracking-wider text-[#5C6080] font-semibold flex items-center gap-1 pt-2">
                     {(() => {
-                      const CatIcon = CATEGORY_ICONS[cat as RiskFactor['category']];
-                      return <CatIcon className="w-3 h-3" />;
+                      const CatIcon = CATEGORY_ICONS[cat as RiskFactor['category']]
+                      return <CatIcon className="w-3 h-3" />
                     })()}
                     {CATEGORY_LABELS[cat as RiskFactor['category']]}
                   </div>
@@ -219,7 +251,7 @@ export default function ScamRiskMeter({ chain, tokenAddress, riskScore: provided
                       <div className="flex items-center gap-2">
                         <span
                           className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"
-                          style={{ color: SEVERITY_COLORS[f.severity], background: SEVERITY_COLORS[f.severity] + '20' }}
+                          style={{ color: SEVERITY_COLORS[f.severity], background: `${SEVERITY_COLORS[f.severity]}20` }}
                         >
                           {f.severity}
                         </span>
@@ -227,9 +259,7 @@ export default function ScamRiskMeter({ chain, tokenAddress, riskScore: provided
                       </div>
                       <div className="text-[#5C6080] mt-0.5">{f.description}</div>
                       {f.evidence && (
-                        <div className="text-[10px] text-[#8B5CF6] font-mono mt-0.5 truncate">
-                          {f.evidence}
-                        </div>
+                        <div className="text-[10px] text-[#8B5CF6] font-mono mt-0.5 truncate">{f.evidence}</div>
                       )}
                     </div>
                   ))}
@@ -240,11 +270,7 @@ export default function ScamRiskMeter({ chain, tokenAddress, riskScore: provided
         </div>
       )}
 
-      {loading && (
-        <div className="px-4 py-3 text-center text-[10px] text-[#5C6080]">
-          Analyzing risk factors...
-        </div>
-      )}
+      {loading && <div className="px-4 py-3 text-center text-[10px] text-[#5C6080]">Analyzing risk factors...</div>}
     </div>
-  );
+  )
 }
