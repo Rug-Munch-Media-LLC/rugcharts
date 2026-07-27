@@ -1,0 +1,163 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import AISignals from './components/rugcharts/AISignals'
+import LiveTradeTape from './components/rugcharts/LiveTradeTape'
+import MultiChainCompare from './components/rugcharts/MultiChainCompare'
+import RugPullWarning from './components/rugcharts/RugPullWarning'
+import ScamRiskMeter from './components/rugcharts/ScamRiskMeter'
+import RugChartsPluginViewer from './components/rugcharts/PluginViewer'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
+
+const DEMO_CHAIN = 'solana'
+const DEMO_TOKEN = 'So11111111111111111111111111111111111111112'
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <div className="min-h-screen bg-surface-900 text-text-primary">
+          <header className="border-b border-[rgba(139,92,246,0.1)] px-4 py-3">
+            <div className="flex items-center justify-between max-w-7xl mx-auto">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-accent-cyan flex items-center justify-center text-white font-bold text-sm">
+                  RC
+                </div>
+                <h1 className="text-lg font-bold tracking-tight">RugCharts</h1>
+              </div>
+              <nav className="flex items-center gap-4 text-sm text-text-secondary">
+                <span className="text-xs uppercase tracking-wider font-semibold">Demo Mode</span>
+              </nav>
+            </div>
+          </header>
+
+          <main className="max-w-7xl mx-auto p-4 space-y-6">
+            {/* Top: ScamRiskMeter + RugPullWarning */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ScamRiskMeter
+                chain={DEMO_CHAIN}
+                tokenAddress={DEMO_TOKEN}
+                riskFactors={[
+                  { category: 'liquidity', severity: 'low', title: 'LP Locked', description: 'Liquidity is locked for 12 months' },
+                  { category: 'contract', severity: 'medium', title: 'Mint Enabled', description: 'Owner can mint new tokens (not renounced)' },
+                  { category: 'holder', severity: 'low', title: 'Distribution', description: 'Top 10 hold 8.2% — healthy' },
+                ]}
+              />
+              <RugPullWarning
+                chain={DEMO_CHAIN}
+                tokenAddress={DEMO_TOKEN}
+                initialWarnings={[
+                  {
+                    id: '1',
+                    level: 'CAUTION',
+                    category: 'contract',
+                    title: 'Contract Not Renounced',
+                    description: 'Owner retains mint authority and can modify contract parameters.',
+                    confidence: 55,
+                    detected_at: Date.now() / 1000,
+                    recommended_action: 'Monitor contract for changes',
+                  },
+                ]}
+              />
+            </div>
+
+            {/* Live Trade Tape */}
+            <LiveTradeTape
+              chain={DEMO_CHAIN}
+              tokenAddress={DEMO_TOKEN}
+              initialTrades={[]}
+            />
+
+            {/* AI Signals + Plugin Viewer */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <AISignals
+                chain={DEMO_CHAIN}
+                tokenAddress={DEMO_TOKEN}
+                initialSignals={[
+                  {
+                    id: 's1',
+                    type: 'buy',
+                    timestamp: Date.now() / 1000 - 3600,
+                    price_at_signal: 142.50,
+                    confidence: 78,
+                    title: 'Accumulation Pattern',
+                    reasoning: 'Multiple large buys from fresh wallets after consolidation at support. RSI divergence confirms.',
+                    indicators: ['RSI Divergence', 'Volume Spike', 'Support Hold'],
+                    target_price: 185.00,
+                    stop_loss: 128.00,
+                    timeframe: '4h',
+                    outcome: 'pending',
+                  },
+                  {
+                    id: 's2',
+                    type: 'warning',
+                    timestamp: Date.now() / 1000 - 7200,
+                    price_at_signal: 138.20,
+                    confidence: 82,
+                    title: 'Cluster Sell Pressure',
+                    reasoning: 'Bundled wallets showing coordinated distribution pattern. 12 wallets funded from same source.',
+                    indicators: ['Bundle Detection', 'Cluster Analysis'],
+                    outcome: 'hit',
+                  },
+                ]}
+              />
+              <div className="rounded-xl border border-[rgba(139,92,246,0.15)] bg-surface-800 p-4">
+                <RugChartsPluginViewer chain={DEMO_CHAIN} tokenAddress={DEMO_TOKEN} />
+              </div>
+            </div>
+
+            {/* Multi-Chain Compare */}
+            <MultiChainCompare
+              initialTokens={[
+                {
+                  chain: 'solana',
+                  address: 'So11111111111111111111111111111111111111112',
+                  symbol: 'SOL',
+                  name: 'Wrapped SOL',
+                  price_usd: 142.50,
+                  price_change_24h: 5.2,
+                  volume_24h: 245000000,
+                  liquidity_usd: 12500000,
+                  holder_count: 154200,
+                  top_holder_pct: 8.2,
+                  risk_score: 22,
+                  risk_level: 'low',
+                  market_cap: 64200000000,
+                },
+                {
+                  chain: 'ethereum',
+                  address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+                  symbol: 'WETH',
+                  name: 'Wrapped Ether',
+                  price_usd: 3320.40,
+                  price_change_24h: -1.8,
+                  volume_24h: 890000000,
+                  liquidity_usd: 45000000,
+                  holder_count: 421000,
+                  top_holder_pct: 12.5,
+                  risk_score: 15,
+                  risk_level: 'low',
+                  market_cap: 398000000000,
+                },
+              ]}
+            />
+          </main>
+
+          <footer className="border-t border-[rgba(139,92,246,0.06)] px-4 py-4 text-center">
+            <p className="text-xs text-text-muted">
+              RugCharts v0.1.0 · Multi-Chain Token Intelligence · Powered by Rug Munch Media LLC
+            </p>
+          </footer>
+        </div>
+      </BrowserRouter>
+    </QueryClientProvider>
+  )
+}
