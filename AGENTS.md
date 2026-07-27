@@ -18,7 +18,7 @@ rugcharts — orphaned component. See TRIAGE.md for disposition.
 - Status: no live deployment (orphaned, merging into rmi-backend)
 
 ## Built With
-- Standards: [github.com/RugMunchMedia/standards](https://github.com/RugMunchMedia/standards)
+- Standards: See the project documentation for development standards
 - Toolchain: See README.md for development toolchain
 - Conventions: See CONTRIBUTING.md for coding conventions
 
@@ -54,5 +54,5 @@ here demonstrates charting patterns — it is NOT the complete RugMunch
 production charting infrastructure. The managed platform at rugmunch.io
 includes proprietary enhancements.
 
-See [METHODOLOGY-PROTECTION.md](https://github.com/RugMunchMedia/standards/blob/main/METHODOLOGY-PROTECTION.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for project methodology.
 for details on what information belongs in public vs private repos.
