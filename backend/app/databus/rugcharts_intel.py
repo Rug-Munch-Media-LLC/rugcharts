@@ -22,6 +22,7 @@ import os
 import time
 from collections import defaultdict
 from datetime import UTC, datetime
+from typing import Any
 
 import httpx
 import redis
@@ -121,7 +122,9 @@ async def smart_money_feed(chain: str = "solana", limit: int = 20, **kw) -> dict
                                 {
                                     "address": addr,
                                     "balance_sol": round(amount, 2),
-                                    "estimated_usd": round(amount * 150, 0),  # approximate
+                                    "estimated_usd": round(
+                                        amount * 150, 0
+                                    ),  # approximate
                                     "signal": "large_holder",
                                 }
                             )
@@ -210,7 +213,10 @@ async def whale_alert_stream(
                                 "jsonrpc": "2.0",
                                 "id": 1,
                                 "method": "getTransaction",
-                                "params": [sig_data["signature"], {"encoding": "jsonParsed"}],
+                                "params": [
+                                    sig_data["signature"],
+                                    {"encoding": "jsonParsed"},
+                                ],
                             },
                         )
                         if tx_resp.status_code == 200:
@@ -220,8 +226,12 @@ async def whale_alert_stream(
                             post = meta.get("postTokenBalances", [])
                             # Detect large balance changes
                             for pb, ab in zip(pre[:5], post[:5], strict=False):
-                                pre_amt = float(pb.get("uiTokenAmount", {}).get("uiAmount", 0) or 0)
-                                post_amt = float(ab.get("uiTokenAmount", {}).get("uiAmount", 0) or 0)
+                                pre_amt = float(
+                                    pb.get("uiTokenAmount", {}).get("uiAmount", 0) or 0
+                                )
+                                post_amt = float(
+                                    ab.get("uiTokenAmount", {}).get("uiAmount", 0) or 0
+                                )
                                 delta = abs(post_amt - pre_amt)
                                 if delta > 1000:  # Threshold
                                     whales.append(
@@ -261,7 +271,9 @@ async def whale_alert_stream(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def token_launch_scanner(chain: str = "solana", limit: int = 50, **kw) -> dict | None:
+async def token_launch_scanner(
+    chain: str = "solana", limit: int = 50, **kw
+) -> dict | None:
     """Scan for recently launched tokens and assign instant risk scores.
 
     Combines: age, liquidity, holder count, deployer history, GoPlus checks.
@@ -331,7 +343,9 @@ async def token_launch_scanner(chain: str = "solana", limit: int = 50, **kw) -> 
                         new_tokens.append(
                             {
                                 "signature": sig_data["signature"][:16] + "...",
-                                "launch_time": datetime.fromtimestamp(sig_data.get("blockTime", 0), tz=UTC).isoformat(),
+                                "launch_time": datetime.fromtimestamp(
+                                    sig_data.get("blockTime", 0), tz=UTC
+                                ).isoformat(),
                                 "age_minutes": round(age_minutes, 1),
                                 "risk_score": risk_score,
                                 "risk_level": risk,
@@ -376,7 +390,9 @@ async def token_launch_scanner(chain: str = "solana", limit: int = 50, **kw) -> 
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def insider_pattern_detector(address: str = "", chain: str = "solana", **kw) -> dict | None:
+async def insider_pattern_detector(
+    address: str = "", chain: str = "solana", **kw
+) -> dict | None:
     """Detect wallets that accumulated before major price movements.
 
     Pattern: large buys in the hours before a significant price increase.
@@ -413,7 +429,11 @@ async def insider_pattern_detector(address: str = "", chain: str = "solana", **k
                 if r.status_code == 200:
                     sigs = r.json().get("result", [])
                     if len(sigs) < 20:
-                        return {"insider_signals": [], "total": 0, "note": "Not enough history"}
+                        return {
+                            "insider_signals": [],
+                            "total": 0,
+                            "note": "Not enough history",
+                        }
 
                     # Find the first significant price discovery
                     # Group transactions into time windows
@@ -429,15 +449,23 @@ async def insider_pattern_detector(address: str = "", chain: str = "solana", **k
                     for window, tx_list in sorted(windows.items()):
                         if len(tx_list) > avg_tx_per_window * 3:  # 3x normal volume
                             # Check if price went up after this window
-                            next_windows = [w for w in windows if w > window and w <= window + 6]
+                            next_windows = [
+                                w for w in windows if w > window and w <= window + 6
+                            ]
                             for nw in next_windows:
                                 if len(windows[nw]) > avg_tx_per_window * 2:
                                     insider_signals.append(
                                         {
-                                            "window_start": datetime.fromtimestamp(window * 600, tz=UTC).isoformat(),
+                                            "window_start": datetime.fromtimestamp(
+                                                window * 600, tz=UTC
+                                            ).isoformat(),
                                             "tx_count_spike": len(tx_list),
                                             "avg_tx_count": round(avg_tx_per_window, 1),
-                                            "spike_multiplier": round(len(tx_list) / max(avg_tx_per_window, 1), 1),
+                                            "spike_multiplier": round(
+                                                len(tx_list)
+                                                / max(avg_tx_per_window, 1),
+                                                1,
+                                            ),
                                             "followed_by_continued_volume": True,
                                             "signal_strength": "HIGH"
                                             if len(tx_list) > avg_tx_per_window * 5
@@ -454,7 +482,9 @@ async def insider_pattern_detector(address: str = "", chain: str = "solana", **k
         "total_signals": len(insider_signals),
         "address": address,
         "chain": chain,
-        "confidence": "HIGH" if len(insider_signals) >= 2 else ("MEDIUM" if insider_signals else "LOW"),
+        "confidence": "HIGH"
+        if len(insider_signals) >= 2
+        else ("MEDIUM" if insider_signals else "LOW"),
         "scan_time": datetime.now(UTC).isoformat(),
         "source": "insider_pattern_detector",
     }
@@ -474,7 +504,9 @@ async def insider_pattern_detector(address: str = "", chain: str = "solana", **k
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def liquidity_risk_monitor(address: str = "", chain: str = "solana", **kw) -> dict | None:
+async def liquidity_risk_monitor(
+    address: str = "", chain: str = "solana", **kw
+) -> dict | None:
     """Monitor liquidity pool health: LP lock, concentration, removal risk.
 
     Critical for rug pull prevention — the #1 thing degens need to check.
@@ -524,7 +556,11 @@ async def liquidity_risk_monitor(address: str = "", chain: str = "solana", **kw)
 
                     lp_holders_list = []
                     for h in holders[:10]:
-                        pct = (float(h.get("amount", 0)) / total_supply * 100) if total_supply > 0 else 0
+                        pct = (
+                            (float(h.get("amount", 0)) / total_supply * 100)
+                            if total_supply > 0
+                            else 0
+                        )
                         lp_holders_list.append(
                             {
                                 "address": h.get("address", "")[:12] + "...",
@@ -583,7 +619,9 @@ async def liquidity_risk_monitor(address: str = "", chain: str = "solana", **kw)
 
     try:
         r = _r()
-        r.setex(cache_key, CACHE_TTL["liquidity"], json.dumps(liquidity_data, default=str))
+        r.setex(
+            cache_key, CACHE_TTL["liquidity"], json.dumps(liquidity_data, default=str)
+        )
         r.close()
     except Exception:
         pass
@@ -596,7 +634,9 @@ async def liquidity_risk_monitor(address: str = "", chain: str = "solana", **kw)
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def holder_health_score(address: str = "", chain: str = "solana", **kw) -> dict | None:
+async def holder_health_score(
+    address: str = "", chain: str = "solana", **kw
+) -> dict | None:
     """Analyze holder distribution for rug pull risk indicators.
 
     Metrics: Gini coefficient, top 10%, fresh wallets, whale dominance.
@@ -648,7 +688,9 @@ async def holder_health_score(address: str = "", chain: str = "solana", **kw) ->
                         return health
 
                     health["total_holders"] = len(holders)
-                    amounts = sorted([float(h.get("amount", 0)) for h in holders], reverse=True)
+                    amounts = sorted(
+                        [float(h.get("amount", 0)) for h in holders], reverse=True
+                    )
                     total = sum(amounts)
 
                     if total <= 0:
@@ -656,12 +698,18 @@ async def holder_health_score(address: str = "", chain: str = "solana", **kw) ->
 
                     # Gini coefficient
                     n = len(amounts)
-                    gini = (2 * sum((i + 1) * amounts[i] for i in range(n))) / (n * total) - (n + 1) / n
+                    gini = (2 * sum((i + 1) * amounts[i] for i in range(n))) / (
+                        n * total
+                    ) - (n + 1) / n
                     health["gini_coefficient"] = round(gini, 3)
 
                     # Top concentration
-                    health["top10_concentration"] = round(sum(amounts[:10]) / total * 100, 1)
-                    health["top1_dominance"] = round(amounts[0] / total * 100, 1) if amounts else 0
+                    health["top10_concentration"] = round(
+                        sum(amounts[:10]) / total * 100, 1
+                    )
+                    health["top1_dominance"] = (
+                        round(amounts[0] / total * 100, 1) if amounts else 0
+                    )
 
                     # Whale count (>1% supply)
                     health["whale_count"] = sum(1 for a in amounts if a / total > 0.01)
@@ -670,31 +718,48 @@ async def holder_health_score(address: str = "", chain: str = "solana", **kw) ->
                     # Factors: Gini inverted, holder count, whale count reduction
                     gini_penalty = min(1.0, gini / 0.9) * 40  # Up to 40 point penalty
                     holder_bonus = min(1.0, n / 1000) * 30  # Up to 30 point bonus
-                    whale_penalty = min(1.0, health["whale_count"] / 10) * 30  # Up to 30 point penalty
-                    health["decentralization_score"] = max(0, round(100 - gini_penalty + holder_bonus - whale_penalty))
+                    whale_penalty = (
+                        min(1.0, health["whale_count"] / 10) * 30
+                    )  # Up to 30 point penalty
+                    health["decentralization_score"] = max(
+                        0, round(100 - gini_penalty + holder_bonus - whale_penalty)
+                    )
 
                     # Risk assessment
                     if gini > 0.8:
                         health["risk_level"] = "CRITICAL"
-                        health["risk_factors"].append(f"Extreme concentration (Gini={gini:.2f})")
+                        health["risk_factors"].append(
+                            f"Extreme concentration (Gini={gini:.2f})"
+                        )
                     elif gini > 0.6:
                         health["risk_level"] = "HIGH"
-                        health["risk_factors"].append(f"High concentration (Gini={gini:.2f})")
+                        health["risk_factors"].append(
+                            f"High concentration (Gini={gini:.2f})"
+                        )
                     elif gini > 0.4:
                         health["risk_level"] = "MEDIUM"
-                        health["risk_factors"].append(f"Moderate concentration (Gini={gini:.2f})")
+                        health["risk_factors"].append(
+                            f"Moderate concentration (Gini={gini:.2f})"
+                        )
                     else:
                         health["risk_level"] = "LOW"
 
                     if health["top1_dominance"] > 50:
                         health["risk_level"] = "CRITICAL"
-                        health["risk_factors"].append(f"Single wallet dominance {health['top1_dominance']}%")
+                        health["risk_factors"].append(
+                            f"Single wallet dominance {health['top1_dominance']}%"
+                        )
 
                     if n < 20:
                         health["risk_level"] = max(
                             health["risk_level"],
                             "HIGH",
-                            key=lambda x: {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}.get(x, 0),
+                            key=lambda x: {
+                                "LOW": 0,
+                                "MEDIUM": 1,
+                                "HIGH": 2,
+                                "CRITICAL": 3,
+                            }.get(x, 0),
                         )
                         health["risk_factors"].append(f"Very few holders ({n})")
 
@@ -875,7 +940,9 @@ RUG_PATTERNS = [
 ]
 
 
-async def rug_pattern_matcher(address: str = "", chain: str = "solana", **kw) -> dict | None:
+async def rug_pattern_matcher(
+    address: str = "", chain: str = "solana", **kw
+) -> dict | None:
     """Match token characteristics against known rug pull patterns.
 
     Each pattern gets a similarity score. High matches = high rug probability.
@@ -916,7 +983,12 @@ async def rug_pattern_matcher(address: str = "", chain: str = "solana", **kw) ->
                 # Get token data
                 r = await c.post(
                     f"https://mainnet.helius-rpc.com/?api-key={api_key}",
-                    json={"jsonrpc": "2.0", "id": 1, "method": "getAsset", "params": [address]},
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "getAsset",
+                        "params": [address],
+                    },
                 )
                 if r.status_code == 200:
                     asset = r.json().get("result", {})
@@ -939,7 +1011,9 @@ async def rug_pattern_matcher(address: str = "", chain: str = "solana", **kw) ->
                         signals["holder_count"] = len(holders)
                         total = sum(float(h.get("amount", 0)) for h in holders)
                         if total > 0:
-                            signals["top_holder_pct"] = float(holders[0].get("amount", 0)) / total * 100
+                            signals["top_holder_pct"] = (
+                                float(holders[0].get("amount", 0)) / total * 100
+                            )
 
                 # Get first transaction to determine age
                 r3 = await c.post(
@@ -954,7 +1028,9 @@ async def rug_pattern_matcher(address: str = "", chain: str = "solana", **kw) ->
                 if r3.status_code == 200:
                     sigs = r3.json().get("result", [])
                     if sigs:
-                        age = int(time.time()) - sigs[0].get("blockTime", int(time.time()))
+                        age = int(time.time()) - sigs[0].get(
+                            "blockTime", int(time.time())
+                        )
                         signals["age_hours"] = age / 3600
 
         # Match against known patterns
@@ -1053,7 +1129,9 @@ async def rug_pattern_matcher(address: str = "", chain: str = "solana", **kw) ->
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def developer_reputation(address: str = "", chain: str = "solana", **kw) -> dict | None:
+async def developer_reputation(
+    address: str = "", chain: str = "solana", **kw
+) -> dict | None:
     """Track deployer wallet history across all tokens they've created.
 
     Uses: Arkham entity + Helius transaction history + local token scanner data.
@@ -1117,21 +1195,37 @@ async def developer_reputation(address: str = "", chain: str = "solana", **kw) -
                         # Estimate token deployments by counting program interactions
                         reputation["total_transactions"] = len(sigs)
 
-                        oldest = min(s.get("blockTime", float("inf")) for s in sigs if s.get("blockTime"))
-                        newest = max(s.get("blockTime", 0) for s in sigs if s.get("blockTime"))
+                        oldest = min(
+                            s.get("blockTime", float("inf"))
+                            for s in sigs
+                            if s.get("blockTime")
+                        )
+                        newest = max(
+                            s.get("blockTime", 0) for s in sigs if s.get("blockTime")
+                        )
                         if oldest < float("inf") and newest > 0:
-                            reputation["first_seen"] = datetime.fromtimestamp(oldest, tz=UTC).isoformat()
-                            reputation["last_active"] = datetime.fromtimestamp(newest, tz=UTC).isoformat()
-                            reputation["activity_span_days"] = round((newest - oldest) / 86400, 1)
+                            reputation["first_seen"] = datetime.fromtimestamp(
+                                oldest, tz=UTC
+                            ).isoformat()
+                            reputation["last_active"] = datetime.fromtimestamp(
+                                newest, tz=UTC
+                            ).isoformat()
+                            reputation["activity_span_days"] = round(
+                                (newest - oldest) / 86400, 1
+                            )
 
                         # Heuristic: many transactions to token programs = likely deployer
                         if len(sigs) > 500:
                             reputation["total_tokens_deployed"] = "10+"
-                            reputation["risk_factors"].append("High-volume deployer (>500 txs)")
+                            reputation["risk_factors"].append(
+                                "High-volume deployer (>500 txs)"
+                            )
                             reputation["risk_level"] = "HIGH"
                         elif len(sigs) > 100:
                             reputation["total_tokens_deployed"] = "5-10"
-                            reputation["risk_factors"].append("Active deployer (>100 txs)")
+                            reputation["risk_factors"].append(
+                                "Active deployer (>100 txs)"
+                            )
                             reputation["risk_level"] = "MEDIUM"
                         elif len(sigs) > 10:
                             reputation["total_tokens_deployed"] = "1-5"
@@ -1148,7 +1242,9 @@ async def developer_reputation(address: str = "", chain: str = "solana", **kw) -
 
     try:
         r = _r()
-        r.setex(cache_key, CACHE_TTL["dev_reputation"], json.dumps(reputation, default=str))
+        r.setex(
+            cache_key, CACHE_TTL["dev_reputation"], json.dumps(reputation, default=str)
+        )
         r.close()
     except Exception:
         pass
@@ -1157,11 +1253,207 @@ async def developer_reputation(address: str = "", chain: str = "solana", **kw) -
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# — Local helpers for instant_token_report (no hallucinated imports) —
+# ═══════════════════════════════════════════════════════════════════════
+
+
+async def _local_run_full_scan(address: str, chain: str, **kw) -> dict | None:
+    """Local token security scan using Helius + GoPlus API.
+
+    Replaces the hallucinated ``from app.databus.token_security import run_full_scan``
+    that does not exist in the rugcharts codebase.
+    """
+    api_key = kw.get("api_key", "") or HELIUS_KEY
+    chain_id_map = {"solana": "1", "ethereum": "1", "bsc": "56", "base": "8453"}
+    chain_id = chain_id_map.get(chain, "1")
+
+    checks: dict[str, dict[str, Any]] = {}
+    score_deductions = 0
+
+    # ── Check 1: Honeypot / ownership via GoPlus ──
+    goplus_url = f"https://api.gopluslabs.io/api/v1/token_security/{chain_id}"
+    try:
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.get(goplus_url, params={"contract_addresses": address})
+            if r.status_code == 200:
+                result = r.json().get("result", {}).get(address.lower(), {})
+                if result:
+                    is_honeypot = result.get("is_honeypot") == "1"
+                    if is_honeypot:
+                        checks["honeypot"] = {
+                            "status": "fail",
+                            "details": "Honeypot detected — sell may be blocked",
+                        }
+                        score_deductions += 30
+
+                    if result.get("can_take_back_ownership") == "1":
+                        checks["ownership"] = {
+                            "status": "fail",
+                            "details": "Owner can reclaim tokens (honeypot risk)",
+                        }
+                        score_deductions += 15
+
+                    buy_tax = float(result.get("buy_tax", "0"))
+                    sell_tax = float(result.get("sell_tax", "0"))
+                    if buy_tax > 10 or sell_tax > 10:
+                        checks["high_tax"] = {
+                            "status": "warning",
+                            "details": f"Buy tax {buy_tax}%, Sell tax {sell_tax}%",
+                        }
+                        score_deductions += 10
+
+                    if result.get("is_mintable") == "1":
+                        checks["mintable"] = {
+                            "status": "fail",
+                            "details": "Token is mintable — supply can be inflated",
+                        }
+                        score_deductions += 15
+
+                    if result.get("is_proxy") == "1":
+                        checks["proxy"] = {
+                            "status": "warning",
+                            "details": "Upgradeable proxy — contract can change",
+                        }
+                        score_deductions += 10
+
+                    if result.get("is_blacklisted") == "1":
+                        checks["blacklist"] = {
+                            "status": "fail",
+                            "details": "Token has blacklist function",
+                        }
+                        score_deductions += 20
+
+                    if result.get("is_open_source") == "0":
+                        checks["source_code"] = {
+                            "status": "warning",
+                            "details": "Contract source not verified",
+                        }
+                        score_deductions += 10
+    except Exception as e:
+        logger.debug(f"GoPlus security scan failed: {e}")
+
+    # ── Check 2: Helius asset info ──
+    if chain == "solana" and api_key and not checks:
+        try:
+            async with httpx.AsyncClient(timeout=10) as c:
+                r = await c.post(
+                    f"https://mainnet.helius-rpc.com/?api-key={api_key}",
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "getAsset",
+                        "params": [address],
+                    },
+                )
+                if r.status_code == 200:
+                    asset = r.json().get("result", {})
+                    if not asset:
+                        checks["not_found"] = {
+                            "status": "warning",
+                            "details": "Token not found on chain",
+                        }
+                        score_deductions += 10
+                    elif asset.get("authorities"):
+                        for auth in asset["authorities"]:
+                            if (
+                                auth.get("type") in ("mint", "freeze")
+                                and auth.get("status") == "on"
+                            ):
+                                checks["authority_active"] = {
+                                    "status": "warning",
+                                    "details": f"{auth['type']} authority is still active",
+                                }
+                                score_deductions += 10
+        except Exception as e:
+            logger.debug(f"Helius asset scan failed: {e}")
+
+    total_checks = len(checks)
+    security_score = max(0, min(100, 100 - score_deductions))
+
+    if security_score >= 80:
+        risk_band = "SAFE"
+    elif security_score >= 60:
+        risk_band = "WARNING"
+    else:
+        risk_band = "DANGER"
+
+    return {
+        "security_score": security_score,
+        "risk_band": risk_band,
+        "total_checks_run": total_checks,
+        "checks": checks,
+    }
+
+
+def _local_quick_authenticity_score(
+    volume_24h: float,
+    liquidity_usd: float,
+    unique_wallets: int,
+    _txn_count: int = 0,
+) -> dict[str, Any]:
+    """Compute a volume authenticity score from available metrics.
+
+    Replaces the hallucinated ``from app.databus.volume_authenticity import quick_authenticity_score``
+    that does not exist in the rugcharts codebase.
+    """
+    score = 100
+    fake_pct = 0
+
+    # 1. Volume / liquidity ratio
+    if liquidity_usd > 0 and volume_24h > 0:
+        ratio = volume_24h / liquidity_usd
+        if ratio > 100:
+            score -= 30
+            fake_pct += 30
+        elif ratio > 50:
+            score -= 20
+            fake_pct += 20
+        elif ratio > 20:
+            score -= 10
+            fake_pct += 10
+
+    # 2. Wallet count vs volume
+    if unique_wallets > 0 and volume_24h > 0:
+        avg_per_wallet = volume_24h / unique_wallets
+        if avg_per_wallet > 10000:
+            score -= 15
+            fake_pct += 15
+        elif avg_per_wallet > 5000:
+            score -= 8
+            fake_pct += 8
+
+    # 3. Low wallet count with high volume = suspicious
+    if volume_24h > 10000 and unique_wallets < 50:
+        score -= 20
+        fake_pct += 20
+
+    score = max(0, min(100, score))
+    fake_pct = max(0, min(100, fake_pct))
+
+    if fake_pct >= 60:
+        risk_level = "CRITICAL"
+    elif fake_pct >= 30:
+        risk_level = "HIGH"
+    elif fake_pct >= 10:
+        risk_level = "MEDIUM"
+    else:
+        risk_level = "LOW"
+
+    return {
+        "fake_volume_pct": fake_pct,
+        "authentic_score": score,
+        "risk_level": risk_level,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # 10. INSTANT TOKEN REPORT — One-call comprehensive intel
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def instant_token_report(address: str = "", chain: str = "solana", **kw) -> dict | None:
+async def instant_token_report(
+    address: str = "", chain: str = "solana", **kw
+) -> dict | None:
     """Generate a complete intelligence report for any token in a single call.
 
     Combines: security scan, holder health, liquidity risk, volume authenticity,
@@ -1198,9 +1490,7 @@ async def instant_token_report(address: str = "", chain: str = "solana", **kw) -
     try:
         # ── Section 1: Security Scan ──
         try:
-            from app.databus.token_security import run_full_scan
-
-            security = await run_full_scan(address, chain, api_key=api_key)
+            security = await _local_run_full_scan(address, chain, api_key=api_key)
             if security:
                 report["sections"]["security"] = {
                     "score": security.get("security_score", 50),
@@ -1236,7 +1526,9 @@ async def instant_token_report(address: str = "", chain: str = "solana", **kw) -
             liq_data = await liquidity_risk_monitor(address, chain, api_key=api_key)
             if liq_data:
                 report["sections"]["liquidity"] = {
-                    "concentration_risk": liq_data.get("lp_concentration_risk", "unknown"),
+                    "concentration_risk": liq_data.get(
+                        "lp_concentration_risk", "unknown"
+                    ),
                     "risk_score": liq_data.get("risk_score", 50),
                     "risk_level": liq_data.get("risk_level", "UNKNOWN"),
                     "lp_holders": len(liq_data.get("lp_holders", [])),
@@ -1249,7 +1541,11 @@ async def instant_token_report(address: str = "", chain: str = "solana", **kw) -
         try:
             rug_data = await rug_pattern_matcher(address, chain, api_key=api_key)
             if rug_data:
-                top_match = rug_data.get("pattern_matches", [{}])[0] if rug_data.get("pattern_matches") else {}
+                top_match = (
+                    rug_data.get("pattern_matches", [{}])[0]
+                    if rug_data.get("pattern_matches")
+                    else {}
+                )
                 report["sections"]["rug_patterns"] = {
                     "total_matches": rug_data.get("total_matches", 0),
                     "overall_risk": rug_data.get("overall_rug_risk", "LOW"),
@@ -1288,9 +1584,7 @@ async def instant_token_report(address: str = "", chain: str = "solana", **kw) -
             liq = float(kw.get("liquidity_usd", 0))
             uw = int(kw.get("unique_wallets", 0))
             if vol_24h > 0 or liq > 0:
-                from app.databus.volume_authenticity import quick_authenticity_score
-
-                auth = quick_authenticity_score(vol_24h, liq, uw, 0)
+                auth = _local_quick_authenticity_score(vol_24h, liq, uw, 0)
                 report["sections"]["volume"] = {
                     "fake_volume_pct": auth.get("fake_volume_pct", 0),
                     "authentic_score": auth.get("authentic_score", 100),
@@ -1340,15 +1634,23 @@ async def instant_token_report(address: str = "", chain: str = "solana", **kw) -
         # Quick verdict
         sections = report["sections"]
         if sections.get("security", {}).get("band") == "DANGER":
-            report["quick_verdict"] = "EXTREME RISK — Multiple critical security failures detected"
+            report["quick_verdict"] = (
+                "EXTREME RISK — Multiple critical security failures detected"
+            )
         elif report["overall_risk"]["level"] == "CRITICAL":
             report["quick_verdict"] = "HIGH RISK — Multiple red flags. Not recommended."
         elif report["overall_risk"]["level"] == "HIGH":
-            report["quick_verdict"] = "ELEVATED RISK — Proceed with caution. Review details."
+            report["quick_verdict"] = (
+                "ELEVATED RISK — Proceed with caution. Review details."
+            )
         elif report["overall_risk"]["level"] == "MEDIUM":
-            report["quick_verdict"] = "MODERATE RISK — Standard for new tokens. Monitor closely."
+            report["quick_verdict"] = (
+                "MODERATE RISK — Standard for new tokens. Monitor closely."
+            )
         elif sections.get("entity", {}).get("name"):
-            report["quick_verdict"] = f"KNOWN ENTITY — {sections['entity']['name']}. Lower risk."
+            report["quick_verdict"] = (
+                f"KNOWN ENTITY — {sections['entity']['name']}. Lower risk."
+            )
         else:
             report["quick_verdict"] = "LOW RISK — No significant concerns detected."
 
