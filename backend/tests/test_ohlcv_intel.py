@@ -48,9 +48,27 @@ FAKE_PAIR_INFO = {
     }
 }
 
+FAKE_RAG_RESPONSE = {
+    "scam_risk": "unknown",
+    "confidence": 0,
+    "matches": [],
+    "source": "rmi-rag",
+}
+
+
+def _mock_clickhouse_empty(httpx_mock):
+    """Mock ClickHouse to return empty (no data from chain-indexer) so tests fall back to GeckoTerminal."""
+    httpx_mock.add_response(
+        url=re.compile(r"http://ch:8123/"),
+        text="",
+        status_code=200,
+        is_optional=True,
+    )
+
 
 def _mock_gecko(httpx_mock):
     """Mock GeckoTerminal OHLCV and pair info endpoints."""
+    _mock_clickhouse_empty(httpx_mock)
     httpx_mock.add_response(
         url=re.compile(
             r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/.*/ohlcv/.*"
@@ -63,6 +81,12 @@ def _mock_gecko(httpx_mock):
             r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/[^/]+$"
         ),
         json=FAKE_PAIR_INFO,
+        status_code=200,
+        is_optional=True,
+    )
+    httpx_mock.add_response(
+        url=re.compile(r"http://localhost:8012/api/v1/rag/v2/scam-check.*"),
+        json=FAKE_RAG_RESPONSE,
         status_code=200,
         is_optional=True,
     )
@@ -117,6 +141,7 @@ async def test_ohlcv_summary_correct(client: AsyncClient, httpx_mock):
 @pytest.mark.asyncio
 async def test_ohlcv_empty_response(client: AsyncClient, httpx_mock):
     """OHLCV should handle empty GeckoTerminal response."""
+    _mock_clickhouse_empty(httpx_mock)
     httpx_mock.add_response(
         url=re.compile(
             r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/.*/ohlcv/.*"
