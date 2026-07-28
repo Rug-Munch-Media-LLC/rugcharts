@@ -121,9 +121,7 @@ async def _fetch_dexscreener_trending(chain: str, limit: int = 20) -> list[dict]
                         break
 
             # Also get new pairs for the chain (high volume new launches)
-            r2 = await client.get(
-                "https://api.dexscreener.com/token-profiles/latest/v1"
-            )
+            r2 = await client.get("https://api.dexscreener.com/token-profiles/latest/v1")
             if r2.status_code == 200:
                 data2 = r2.json()
                 items2 = data2 if isinstance(data2, list) else []
@@ -163,24 +161,15 @@ async def _fetch_dexscreener_trending(chain: str, limit: int = 20) -> list[dict]
                                 pair = pairs[0]  # Best pair
                                 for t in tokens:
                                     if t["address"] == addr:
-                                        t["price_usd"] = float(
-                                            pair.get("priceUsd", 0) or 0
-                                        )
+                                        t["price_usd"] = float(pair.get("priceUsd", 0) or 0)
                                         t["change_24h"] = float(
-                                            (pair.get("priceChange", {}) or {}).get(
-                                                "h24", 0
-                                            )
-                                            or 0
+                                            (pair.get("priceChange", {}) or {}).get("h24", 0) or 0
                                         )
                                         t["volume_24h"] = float(
-                                            (pair.get("volume", {}) or {}).get("h24", 0)
-                                            or 0
+                                            (pair.get("volume", {}) or {}).get("h24", 0) or 0
                                         )
                                         t["liquidity_usd"] = float(
-                                            (pair.get("liquidity", {}) or {}).get(
-                                                "usd", 0
-                                            )
-                                            or 0
+                                            (pair.get("liquidity", {}) or {}).get("usd", 0) or 0
                                         )
                                         t["fdv"] = float(pair.get("fdv", 0) or 0)
                                         t["dex"] = pair.get("dexId", "")
@@ -259,9 +248,7 @@ async def _fetch_ohlcv_gecko(
             r = await client.get(url, params=params)
             if r.status_code == 200:
                 data = r.json()
-                ohlcv_list = (
-                    data.get("data", {}).get("attributes", {}).get("ohlcv_list", [])
-                )
+                ohlcv_list = data.get("data", {}).get("attributes", {}).get("ohlcv_list", [])
                 for c in reversed(ohlcv_list):  # Reverse to chronological order
                     if len(c) >= 6:
                         candles.append(
@@ -313,12 +300,8 @@ async def _fetch_pair_info(pair_address: str, chain: str) -> dict:
                 info = {
                     "name": data.get("name", ""),
                     "address": data.get("address", ""),
-                    "base_token_price_usd": float(
-                        data.get("base_token_price_usd", 0) or 0
-                    ),
-                    "quote_token_price_usd": float(
-                        data.get("quote_token_price_usd", 0) or 0
-                    ),
+                    "base_token_price_usd": float(data.get("base_token_price_usd", 0) or 0),
+                    "quote_token_price_usd": float(data.get("quote_token_price_usd", 0) or 0),
                     "price_change_24h": float(
                         data.get("price_change_percentage", {}).get("h24", 0) or 0
                     ),
@@ -329,40 +312,22 @@ async def _fetch_pair_info(pair_address: str, chain: str) -> dict:
                     "fdv": float(data.get("fdv", 0) or 0),
                     "market_cap": float(data.get("market_cap_usd", 0) or 0),
                     "txns_24h_buys": int(
-                        (data.get("transactions", {}) or {})
-                        .get("h24", {})
-                        .get("buys", 0)
-                        or 0
+                        (data.get("transactions", {}) or {}).get("h24", {}).get("buys", 0) or 0
                     ),
                     "txns_24h_sells": int(
-                        (data.get("transactions", {}) or {})
-                        .get("h24", {})
-                        .get("sells", 0)
-                        or 0
+                        (data.get("transactions", {}) or {}).get("h24", {}).get("sells", 0) or 0
                     ),
                     "txns_6h_buys": int(
-                        (data.get("transactions", {}) or {})
-                        .get("h6", {})
-                        .get("buys", 0)
-                        or 0
+                        (data.get("transactions", {}) or {}).get("h6", {}).get("buys", 0) or 0
                     ),
                     "txns_6h_sells": int(
-                        (data.get("transactions", {}) or {})
-                        .get("h6", {})
-                        .get("sells", 0)
-                        or 0
+                        (data.get("transactions", {}) or {}).get("h6", {}).get("sells", 0) or 0
                     ),
                     "txns_1h_buys": int(
-                        (data.get("transactions", {}) or {})
-                        .get("h1", {})
-                        .get("buys", 0)
-                        or 0
+                        (data.get("transactions", {}) or {}).get("h1", {}).get("buys", 0) or 0
                     ),
                     "txns_1h_sells": int(
-                        (data.get("transactions", {}) or {})
-                        .get("h1", {})
-                        .get("sells", 0)
-                        or 0
+                        (data.get("transactions", {}) or {}).get("h1", {}).get("sells", 0) or 0
                     ),
                     "dex": data.get("dex_id", ""),
                     "pool_created_at": data.get("pool_created_at", ""),
@@ -399,9 +364,7 @@ def _compute_volume_authenticity(pair_info: dict, candles: list[dict]) -> dict:
         ratio = vol_24h / liq
         if ratio > 100:
             score -= 30
-            risk_flags.append(
-                f"Extreme vol/liq ratio ({ratio:.0f}x) — likely wash trading"
-            )
+            risk_flags.append(f"Extreme vol/liq ratio ({ratio:.0f}x) — likely wash trading")
         elif ratio > 50:
             score -= 20
             risk_flags.append(f"Very high vol/liq ratio ({ratio:.0f}x)")
@@ -440,20 +403,14 @@ def _compute_volume_authenticity(pair_info: dict, candles: list[dict]) -> dict:
             max_vol = max(volumes)
             if max_vol > avg_vol * 10:
                 score -= 10
-                risk_flags.append(
-                    f"Volume spike detected ({max_vol / avg_vol:.0f}x average)"
-                )
+                risk_flags.append(f"Volume spike detected ({max_vol / avg_vol:.0f}x average)")
             # Check for uniform volume (bot-like)
             if len(volumes) > 5:
-                std_dev = (
-                    sum((v - avg_vol) ** 2 for v in volumes) / len(volumes)
-                ) ** 0.5
+                std_dev = (sum((v - avg_vol) ** 2 for v in volumes) / len(volumes)) ** 0.5
                 cv = std_dev / avg_vol if avg_vol > 0 else 0
                 if cv < 0.05:
                     score -= 15
-                    risk_flags.append(
-                        "Unnaturally uniform volume distribution (bot pattern)"
-                    )
+                    risk_flags.append("Unnaturally uniform volume distribution (bot pattern)")
 
     # 5. Zero volume check
     if vol_24h == 0:
@@ -544,9 +501,7 @@ def _compute_rug_score(pair_info: dict, vol_auth: dict) -> dict:
             from datetime import datetime
 
             created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
-            age_hours = (
-                datetime.now(created_dt.tzinfo) - created_dt
-            ).total_seconds() / 3600
+            age_hours = (datetime.now(created_dt.tzinfo) - created_dt).total_seconds() / 3600
             if age_hours < 1:
                 score += 15
                 factors.append(f"Brand new pool ({age_hours:.1f}h old)")
@@ -671,11 +626,7 @@ async def rugcharts_intel(
             "volume_sma_20": round(vol_sma, 2),
             "volume_current": round(vol_current, 2),
             "price_vs_sma20": "ABOVE" if closes[-1] > sma20 else "BELOW",
-            "rsi_signal": "OVERBOUGHT"
-            if rsi > 70
-            else "OVERSOLD"
-            if rsi < 30
-            else "NEUTRAL",
+            "rsi_signal": "OVERBOUGHT" if rsi > 70 else "OVERSOLD" if rsi < 30 else "NEUTRAL",
             "trend": "BULLISH" if sma7 > sma20 else "BEARISH",
             "volume_trend": "HIGH"
             if vol_current > vol_sma * 1.5
@@ -705,8 +656,7 @@ async def rugcharts_intel(
             )
         if (
             ta.get("trend") == "BEARISH"
-            and pair_info.get("txns_24h_sells", 0)
-            > pair_info.get("txns_24h_buys", 0) * 2
+            and pair_info.get("txns_24h_sells", 0) > pair_info.get("txns_24h_buys", 0) * 2
         ):
             predictions.append(
                 {
@@ -782,9 +732,11 @@ def _timeframe_to_ch_params(timeframe: str) -> tuple[int, int]:
 async def _fetch_ohlcv_clickhouse(
     pair_address: str, chain: str, timeframe: str = "1h", limit: int = 100
 ) -> list[dict]:
-    """Fetch OHLCV candles from chain-indexer ClickHouse data.
+    """Fetch OHLCV candles from chain-indexer ClickHouse materialized view.
 
-    Tried first (fresher on-chain data), falls back to GeckoTerminal.
+    Queries wallet_memory.dex_ohlcv_hourly (pre-computed 1h candles from raw
+    swap events). For sub-hourly timeframes, returns empty list to fall back
+    to GeckoTerminal.
     """
     cache_key = f"rugcharts:ohlcv_ch:{chain}:{pair_address}:{timeframe}"
     try:
@@ -800,20 +752,43 @@ async def _fetch_ohlcv_clickhouse(
     interval_min, lookback_hours = _timeframe_to_ch_params(timeframe)
     candles = []
 
-    ch_query = (
-        f"SELECT "
-        f"  toUnixTimestamp(toStartOfInterval(timestamp, INTERVAL {interval_min} MINUTE)) as time, "
-        f"  argMin(open, timestamp) as open, "
-        f"  max(high) as high, "
-        f"  min(low) as low, "
-        f"  argMax(close, timestamp) as close, "
-        f"  sum(volume) as volume "
-        f"FROM {CLICKHOUSE_DB}.dex_events "
-        f"WHERE chain = '{chain}' AND pair_address = '{pair_address}' "
-        f"  AND timestamp >= now() - INTERVAL {lookback_hours} HOUR "
-        f"GROUP BY time ORDER BY time ASC LIMIT {limit} "
-        f"FORMAT JSONEachRow"
-    )
+    # Sub-hourly not available from hourly materialized view — fall back
+    if interval_min < 60:
+        return []
+
+    # Source: pre-computed OHLCV materialized view
+    ch_ohlcv_table = "wallet_memory.dex_ohlcv_hourly"
+
+    if interval_min == 60:
+        # Direct 1h — no resampling needed
+        ch_query = (
+            f"SELECT "
+            f"  toUnixTimestamp(timestamp) AS time, "
+            f"  open, high, low, close, volume, trades "
+            f"FROM {ch_ohlcv_table} "
+            f"WHERE chain = '{chain}' AND pair_address = '{pair_address}' "
+            f"  AND timestamp >= now() - INTERVAL {lookback_hours} HOUR "
+            f"ORDER BY timestamp ASC LIMIT {limit} "
+            f"FORMAT JSONEachRow"
+        )
+    else:
+        # Resample from hourly to larger intervals (4h, 1d, etc.)
+        interval_expr = f"toStartOfInterval(timestamp, INTERVAL {interval_min} MINUTE)"
+        ch_query = (
+            f"SELECT "
+            f"  toUnixTimestamp({interval_expr}) AS time, "
+            f"  argMin(open, timestamp) AS open, "
+            f"  max(high) AS high, "
+            f"  min(low) AS low, "
+            f"  argMax(close, timestamp) AS close, "
+            f"  sum(volume) AS volume, "
+            f"  sum(trades) AS trades "
+            f"FROM {ch_ohlcv_table} "
+            f"WHERE chain = '{chain}' AND pair_address = '{pair_address}' "
+            f"  AND timestamp >= now() - INTERVAL {lookback_hours} HOUR "
+            f"GROUP BY time ORDER BY time ASC LIMIT {limit} "
+            f"FORMAT JSONEachRow"
+        )
 
     try:
         async with httpx.AsyncClient(timeout=5) as client:
@@ -901,9 +876,7 @@ async def _fetch_rag_threat_intel(token_address: str, chain: str = "solana") -> 
 # ─── NEW: Signals Endpoint ──────────────────────────────────────────────
 
 
-async def _fetch_dexscreener_token(
-    token_address: str, chain: str = "solana"
-) -> dict | None:
+async def _fetch_dexscreener_token(token_address: str, chain: str = "solana") -> dict | None:
     """Fetch token info from DexScreener by address."""
     chain_map = {
         "solana": "solana",
@@ -944,15 +917,9 @@ async def _fetch_dexscreener_token(
                         "price_change_24h": float(
                             (pair.get("priceChange", {}) or {}).get("h24", 0) or 0
                         ),
-                        "volume_24h": float(
-                            (pair.get("volume", {}) or {}).get("h24", 0) or 0
-                        ),
-                        "volume_6h": float(
-                            (pair.get("volume", {}) or {}).get("h6", 0) or 0
-                        ),
-                        "volume_1h": float(
-                            (pair.get("volume", {}) or {}).get("h1", 0) or 0
-                        ),
+                        "volume_24h": float((pair.get("volume", {}) or {}).get("h24", 0) or 0),
+                        "volume_6h": float((pair.get("volume", {}) or {}).get("h6", 0) or 0),
+                        "volume_1h": float((pair.get("volume", {}) or {}).get("h1", 0) or 0),
                         "liquidity_usd": float(
                             (pair.get("liquidity", {}) or {}).get("usd", 0) or 0
                         ),
@@ -961,28 +928,16 @@ async def _fetch_dexscreener_token(
                         "dex": pair.get("dexId", ""),
                         "pair_address": pair.get("pairAddress", ""),
                         "url": pair.get("url", ""),
-                        "buys_24h": int(
-                            (pair.get("txns", {}) or {}).get("h24", {}).get("buys", 0)
-                        ),
+                        "buys_24h": int((pair.get("txns", {}) or {}).get("h24", {}).get("buys", 0)),
                         "sells_24h": int(
                             (pair.get("txns", {}) or {}).get("h24", {}).get("sells", 0)
                         ),
-                        "buys_6h": int(
-                            (pair.get("txns", {}) or {}).get("h6", {}).get("buys", 0)
-                        ),
-                        "sells_6h": int(
-                            (pair.get("txns", {}) or {}).get("h6", {}).get("sells", 0)
-                        ),
-                        "buys_1h": int(
-                            (pair.get("txns", {}) or {}).get("h1", {}).get("buys", 0)
-                        ),
-                        "sells_1h": int(
-                            (pair.get("txns", {}) or {}).get("h1", {}).get("sells", 0)
-                        ),
+                        "buys_6h": int((pair.get("txns", {}) or {}).get("h6", {}).get("buys", 0)),
+                        "sells_6h": int((pair.get("txns", {}) or {}).get("h6", {}).get("sells", 0)),
+                        "buys_1h": int((pair.get("txns", {}) or {}).get("h1", {}).get("buys", 0)),
+                        "sells_1h": int((pair.get("txns", {}) or {}).get("h1", {}).get("sells", 0)),
                         "created_at": pair.get("pairCreatedAt", 0),
-                        "makers": int(
-                            (pair.get("txns", {}) or {}).get("h24", {}).get("makers", 0)
-                        ),
+                        "makers": int((pair.get("txns", {}) or {}).get("h24", {}).get("makers", 0)),
                         "txns_24h": int(
                             (pair.get("txns", {}) or {}).get("h24", {}).get("total", 0)
                         ),
@@ -1007,15 +962,9 @@ async def _fetch_dexscreener_token(
                             "price_change_24h": float(
                                 (pair.get("priceChange", {}) or {}).get("h24", 0) or 0
                             ),
-                            "volume_24h": float(
-                                (pair.get("volume", {}) or {}).get("h24", 0) or 0
-                            ),
-                            "volume_6h": float(
-                                (pair.get("volume", {}) or {}).get("h6", 0) or 0
-                            ),
-                            "volume_1h": float(
-                                (pair.get("volume", {}) or {}).get("h1", 0) or 0
-                            ),
+                            "volume_24h": float((pair.get("volume", {}) or {}).get("h24", 0) or 0),
+                            "volume_6h": float((pair.get("volume", {}) or {}).get("h6", 0) or 0),
+                            "volume_1h": float((pair.get("volume", {}) or {}).get("h1", 0) or 0),
                             "liquidity_usd": float(
                                 (pair.get("liquidity", {}) or {}).get("usd", 0) or 0
                             ),
@@ -1024,40 +973,26 @@ async def _fetch_dexscreener_token(
                             "dex": pair.get("dexId", ""),
                             "pair_address": pair.get("pairAddress", ""),
                             "buys_24h": int(
-                                (pair.get("txns", {}) or {})
-                                .get("h24", {})
-                                .get("buys", 0)
+                                (pair.get("txns", {}) or {}).get("h24", {}).get("buys", 0)
                             ),
                             "sells_24h": int(
-                                (pair.get("txns", {}) or {})
-                                .get("h24", {})
-                                .get("sells", 0)
+                                (pair.get("txns", {}) or {}).get("h24", {}).get("sells", 0)
                             ),
                             "buys_6h": int(
-                                (pair.get("txns", {}) or {})
-                                .get("h6", {})
-                                .get("buys", 0)
+                                (pair.get("txns", {}) or {}).get("h6", {}).get("buys", 0)
                             ),
                             "sells_6h": int(
-                                (pair.get("txns", {}) or {})
-                                .get("h6", {})
-                                .get("sells", 0)
+                                (pair.get("txns", {}) or {}).get("h6", {}).get("sells", 0)
                             ),
                             "buys_1h": int(
-                                (pair.get("txns", {}) or {})
-                                .get("h1", {})
-                                .get("buys", 0)
+                                (pair.get("txns", {}) or {}).get("h1", {}).get("buys", 0)
                             ),
                             "sells_1h": int(
-                                (pair.get("txns", {}) or {})
-                                .get("h1", {})
-                                .get("sells", 0)
+                                (pair.get("txns", {}) or {}).get("h1", {}).get("sells", 0)
                             ),
                             "created_at": pair.get("pairCreatedAt", 0),
                             "makers": int(
-                                (pair.get("txns", {}) or {})
-                                .get("h24", {})
-                                .get("makers", 0)
+                                (pair.get("txns", {}) or {}).get("h24", {}).get("makers", 0)
                             ),
                             "txns_24h": 0,
                         }
@@ -1162,12 +1097,8 @@ def _compute_signals(token: dict, candles: list[dict]) -> list[dict]:
                     "price": price,
                     "confidence": min(85, int(ratio_6h * 30)),
                     "score": min(85, int(ratio_6h * 30)),
-                    "title": "Volume Spike Detected"
-                    if is_suspicious
-                    else "Volume Surge",
-                    "summary": "Volume Spike Detected"
-                    if is_suspicious
-                    else "Volume Surge",
+                    "title": "Volume Spike Detected" if is_suspicious else "Volume Surge",
+                    "summary": "Volume Spike Detected" if is_suspicious else "Volume Surge",
                     "reasoning": f"6h volume (${vol_6h:,.0f}) is {ratio_6h:.1f}x expected rate. "
                     f"{'Suspicious — possible wash trading' if is_suspicious else 'Genuine interest spike'}.",
                     "reason": f"6h volume (${vol_6h:,.0f}) is {ratio_6h:.1f}x expected rate.",
@@ -1581,15 +1512,9 @@ async def _fetch_holder_estimate(token_address: str, chain: str = "solana") -> d
                     holders = r.json().get("result", {}).get("value", [])
                     if holders:
                         total = sum(float(h.get("amount", 0)) for h in holders)
-                        top1 = (
-                            float(holders[0].get("amount", 0)) / total * 100
-                            if total > 0
-                            else 0
-                        )
+                        top1 = float(holders[0].get("amount", 0)) / total * 100 if total > 0 else 0
                         top10 = (
-                            sum(float(h.get("amount", 0)) for h in holders[:10])
-                            / total
-                            * 100
+                            sum(float(h.get("amount", 0)) for h in holders[:10]) / total * 100
                             if total > 0
                             else 0
                         )
@@ -1601,9 +1526,7 @@ async def _fetch_holder_estimate(token_address: str, chain: str = "solana") -> d
                             "holders": [
                                 {
                                     "address": h.get("address", "")[:12] + "...",
-                                    "pct": round(
-                                        float(h.get("amount", 0)) / total * 100, 2
-                                    )
+                                    "pct": round(float(h.get("amount", 0)) / total * 100, 2)
                                     if total > 0
                                     else 0,
                                 }
@@ -1871,11 +1794,7 @@ def _build_plugin_supply_donut(token_address: str, token: dict) -> dict:
         "summary": {
             "genuine_holders_pct": round(stable_pct + buy_pct * 0.3, 1),
             "high_risk_percentage": round(sell_pct, 1),
-            "risk_level": "HIGH"
-            if sell_pct > 50
-            else "MEDIUM"
-            if sell_pct > 30
-            else "LOW",
+            "risk_level": "HIGH" if sell_pct > 50 else "MEDIUM" if sell_pct > 30 else "LOW",
         },
         "chart_config": {},
     }
@@ -1918,9 +1837,7 @@ def _build_plugin_risk_heatmap(token_address: str, token: dict) -> dict:
         },
     ]
 
-    avg_risk = (
-        sum(d["volume_risk"] + d["sell_pressure"] + d["price_risk"] for d in data) / 9
-    )
+    avg_risk = sum(d["volume_risk"] + d["sell_pressure"] + d["price_risk"] for d in data) / 9
 
     return {
         "type": "risk_heatmap",
@@ -1969,10 +1886,7 @@ def _build_plugin_wash_trading(token_address: str, token: dict) -> dict:
     ]
 
     wash_pct = round(
-        (
-            data[0]["suspicious_vol"]
-            / max(data[0]["suspicious_vol"] + data[0]["organic_vol"], 1)
-        )
+        (data[0]["suspicious_vol"] / max(data[0]["suspicious_vol"] + data[0]["organic_vol"], 1))
         * 100,
         1,
     )
@@ -2109,11 +2023,7 @@ def _build_plugin_social_divergence(token_address: str, token: dict) -> dict:
             "social_score": data[-1]["social_score"],
             "price_momentum": data[-1]["price_momentum"],
             "divergence": round(divergence),
-            "risk_level": "HIGH"
-            if divergence > 30
-            else "MEDIUM"
-            if divergence > 10
-            else "LOW",
+            "risk_level": "HIGH" if divergence > 30 else "MEDIUM" if divergence > 10 else "LOW",
         },
         "chart_config": {
             "lines": [
@@ -2128,9 +2038,7 @@ def _build_plugin_social_divergence(token_address: str, token: dict) -> dict:
     }
 
 
-def _build_plugin_holder_evolution(
-    token_address: str, token: dict, holder_data: dict
-) -> dict:
+def _build_plugin_holder_evolution(token_address: str, token: dict, holder_data: dict) -> dict:
     """Generate holder evolution plugin data."""
     holders_list = holder_data.get("holders", [])
     holder_count = holder_data.get("holder_count", 0)
@@ -2278,9 +2186,7 @@ def _build_plugin_token_health(token_address: str, token: dict, goplus: dict) ->
     score_items.append(
         {
             "name": "Liquidity",
-            "score": min(100, 100 - liq_score)
-            if liq_score < 20
-            else max(0, 100 - liq_score),
+            "score": min(100, 100 - liq_score) if liq_score < 20 else max(0, 100 - liq_score),
         }
     )
 
@@ -2371,22 +2277,14 @@ async def rugcharts_plugins_all(
         plugins["supply_donut"] = _build_plugin_supply_donut(token_address, token)
         plugins["risk_heatmap"] = _build_plugin_risk_heatmap(token_address, token)
         plugins["wash_trading"] = _build_plugin_wash_trading(token_address, token)
-        plugins["contract_risk"] = _build_plugin_contract_risk(
-            token_address, token, goplus
-        )
-        plugins["social_divergence"] = _build_plugin_social_divergence(
-            token_address, token
-        )
+        plugins["contract_risk"] = _build_plugin_contract_risk(token_address, token, goplus)
+        plugins["social_divergence"] = _build_plugin_social_divergence(token_address, token)
         plugins["holder_evolution"] = _build_plugin_holder_evolution(
             token_address, token, holder_data
         )
         plugins["fund_flow"] = _build_plugin_fund_flow(token_address, token)
-        plugins["cluster_activity"] = _build_plugin_cluster_activity(
-            token_address, token
-        )
-        plugins["token_health"] = _build_plugin_token_health(
-            token_address, token, goplus
-        )
+        plugins["cluster_activity"] = _build_plugin_cluster_activity(token_address, token)
+        plugins["token_health"] = _build_plugin_token_health(token_address, token, goplus)
     else:
         # Static/default plugins when no token specified
         plugin_defs = [
