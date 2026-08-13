@@ -73,7 +73,7 @@ export default function LiveTradeTape({ chain, tokenAddress, initialTrades = [],
           try {
             const trade = JSON.parse(evt.data) as Trade
             setTrades((prev) => [trade, ...prev].slice(0, 200))
-          } catch (_e) {
+          } catch {
             /* ignore */
           }
         }
@@ -85,7 +85,7 @@ export default function LiveTradeTape({ chain, tokenAddress, initialTrades = [],
         ws.onerror = () => {
           ws.close()
         }
-      } catch (_e) {
+      } catch {
         reconnectTimer = setTimeout(connect, 5000)
       }
     }
