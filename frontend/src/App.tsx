@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import AISignals from './components/rugcharts/AISignals'
 import LiveTradeTape from './components/rugcharts/LiveTradeTape'
@@ -6,6 +7,7 @@ import MultiChainCompare from './components/rugcharts/MultiChainCompare'
 import RugChartsPluginViewer from './components/rugcharts/PluginViewer'
 import RugPullWarning from './components/rugcharts/RugPullWarning'
 import ScamRiskMeter from './components/rugcharts/ScamRiskMeter'
+import TaCandleChart from './components/rugcharts/TaCandleChart'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,7 +22,40 @@ const queryClient = new QueryClient({
 const DEMO_CHAIN = 'solana'
 const DEMO_TOKEN = 'So11111111111111111111111111111111111111112'
 
+/** Deterministic random-walk OHLCV series for the demo TA candle chart. */
+function makeDemoCandles(count: number) {
+  const candles = []
+  // Non-zero seed: 0 is a fixed point of xorshift32.
+  let seed = 0x9e3779b9
+  const next = () => {
+    // xorshift32 — deterministic across renders, no Math.random
+    seed ^= seed << 13
+    seed ^= seed >>> 17
+    seed ^= seed << 5
+    return (seed >>> 0) / 4294967296
+  }
+  let close = 140
+  const start = Date.now() - count * 86_400_000
+  for (let i = 0; i < count; i++) {
+    const drift = (next() - 0.48) * 0.06
+    const open = close
+    close = open * (1 + drift)
+    const high = Math.max(open, close) * (1 + next() * 0.02)
+    const low = Math.min(open, close) * (1 - next() * 0.02)
+    candles.push({
+      timestamp: start + i * 86_400_000,
+      open,
+      high,
+      low,
+      close,
+      volume: Math.round(1_000_000 + next() * 4_000_000),
+    })
+  }
+  return candles
+}
+
 export default function App() {
+  const demoCandles = useMemo(() => makeDemoCandles(240), [])
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -162,6 +197,17 @@ export default function App() {
                 },
               ]}
             />
+
+            {/* Technical Analysis — KLineChart + kand indicators */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">
+                  Technical Analysis
+                </h2>
+                <span className="text-xs text-text-muted">EMA · MACD · RSI — computed in-browser</span>
+              </div>
+              <TaCandleChart data={demoCandles} ticker="SOL/USDC" />
+            </div>
           </main>
 
           <footer className="border-t border-[rgba(139,92,246,0.06)] px-4 py-4 text-center">
