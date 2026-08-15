@@ -8,10 +8,11 @@ dev reputation, RAG threat intel, and comprehensive token intelligence.
 import json
 import logging
 import os
+import re
 
 import httpx
 import redis
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 logger = logging.getLogger("rugcharts_router")
 
@@ -46,6 +47,50 @@ GECKO_NETWORKS = {
     "avalanche": "avax",
     "optimism": "optimism",
 }
+
+# ── Input validation (SQL injection guards) ──────────────────────────────
+# Both ``chain`` and ``pair_address`` are user-controlled path parameters
+# that are interpolated into the ClickHouse OHLCV query. They are never
+# allowed to reach the f-string query builder without passing the checks
+# below. An allowlist for chains plus a strict address/pair-id format for
+# pair_address means an attacker can only inject a fixed set of safe
+# literal values.
+
+VALID_CHAINS = frozenset(GECKO_NETWORKS)
+
+# EVM pair addresses are 0x-prefixed 40-hex; Solana pubkeys and Tron
+# addresses are base58 (32-44 chars). Both formats are accepted; anything
+# else (quotes, semicolons, comments, whitespace) is rejected with HTTP 400.
+PAIR_ADDRESS_RE = re.compile(r"^(?:0x[0-9a-fA-F]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})$")
+
+
+def _validate_chain(chain: str) -> None:
+    """Reject chains not in ``GECKO_NETWORKS`` with HTTP 400.
+
+    Guards the ClickHouse query builder against SQL injection via the
+    ``chain`` path parameter — unknown values are rejected before any
+    f-string interpolation.
+    """
+    if chain not in VALID_CHAINS:
+        raise HTTPException(status_code=400, detail=f"Unsupported chain '{chain}'")
+
+
+def _validate_pair_address(pair_address: str) -> None:
+    """Reject pair addresses that are not a safe address/pair-id format.
+
+    Accepts EVM hex (``0x`` + 40 hex chars) or base58 (Solana/Tron). This
+    blocks SQL injection payloads (quotes, semicolons, comments) before the
+    value is interpolated into the ClickHouse query.
+    """
+    if not PAIR_ADDRESS_RE.fullmatch(pair_address):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Invalid pair_address: expected a 0x-prefixed 40-character "
+                "hex address or a base58 address"
+            ),
+        )
+
 
 # Timeframe mapping for GeckoTerminal
 GECKO_TIMEFRAMES = {
@@ -737,7 +782,15 @@ async def _fetch_ohlcv_clickhouse(
     Queries wallet_memory.dex_ohlcv_hourly (pre-computed 1h candles from raw
     swap events). For sub-hourly timeframes, returns empty list to fall back
     to GeckoTerminal.
+
+    Raises HTTP 400 if ``chain`` or ``pair_address`` are not safe inputs —
+    both are user-controlled and interpolated into the ClickHouse SQL query,
+    so they are validated (chain allowlist + address format) before any
+    interpolation.
     """
+    _validate_chain(chain)
+    _validate_pair_address(pair_address)
+
     cache_key = f"rugcharts:ohlcv_ch:{chain}:{pair_address}:{timeframe}"
     try:
         r = _r()
@@ -761,8 +814,10 @@ async def _fetch_ohlcv_clickhouse(
 
     if interval_min == 60:
         # Direct 1h — no resampling needed
+        # NOTE: chain/pair_address validated by _validate_chain/_validate_pair_address
+        # at the top of this function — no unvalidated user input reaches the SQL.
         ch_query = (
-            f"SELECT "
+            f"SELECT "  # noqa: S608
             f"  toUnixTimestamp(timestamp) AS time, "
             f"  open, high, low, close, volume, trades "
             f"FROM {ch_ohlcv_table} "
@@ -774,8 +829,9 @@ async def _fetch_ohlcv_clickhouse(
     else:
         # Resample from hourly to larger intervals (4h, 1d, etc.)
         interval_expr = f"toStartOfInterval(timestamp, INTERVAL {interval_min} MINUTE)"
+        # NOTE: chain/pair_address validated at the top of this function.
         ch_query = (
-            f"SELECT "
+            f"SELECT "  # noqa: S608
             f"  toUnixTimestamp({interval_expr}) AS time, "
             f"  argMin(open, timestamp) AS open, "
             f"  max(high) AS high, "

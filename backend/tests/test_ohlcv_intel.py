@@ -6,9 +6,18 @@ and GET /api/v1/rugcharts/intel/{chain}/{pair_address}
 from __future__ import annotations
 
 import re
+from urllib.parse import quote
 
 import pytest
+from app.routers.rugcharts import _validate_chain, _validate_pair_address
+from fastapi import HTTPException
 from httpx import AsyncClient
+
+# Valid pair address fixtures — must pass the SQLi guard (chain allowlist +
+# address format) used before the ClickHouse query is built:
+# Solana/base58-style address (44 chars) and EVM hex address (0x + 40 hex).
+SOLANA_PAIR_ADDRESS = "A" * 44
+ETH_PAIR_ADDRESS = "0x" + "a" * 40
 
 # Fake OHLCV data (24 candles upward trend)
 FAKE_OHLCV = {
@@ -70,16 +79,12 @@ def _mock_gecko(httpx_mock):
     """Mock GeckoTerminal OHLCV and pair info endpoints."""
     _mock_clickhouse_empty(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(
-            r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/.*/ohlcv/.*"
-        ),
+        url=re.compile(r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/.*/ohlcv/.*"),
         json=FAKE_OHLCV,
         status_code=200,
     )
     httpx_mock.add_response(
-        url=re.compile(
-            r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/[^/]+$"
-        ),
+        url=re.compile(r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/[^/]+$"),
         json=FAKE_PAIR_INFO,
         status_code=200,
         is_optional=True,
@@ -98,7 +103,7 @@ async def test_ohlcv_returns_full_structure(client: AsyncClient, httpx_mock):
     _mock_gecko(httpx_mock)
 
     resp = await client.get(
-        "/api/v1/rugcharts/ohlcv/solana/pair123?timeframe=1h&limit=24"
+        f"/api/v1/rugcharts/ohlcv/solana/{SOLANA_PAIR_ADDRESS}?timeframe=1h&limit=24"
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -127,7 +132,7 @@ async def test_ohlcv_summary_correct(client: AsyncClient, httpx_mock):
     """OHLCV summary calculations should be consistent."""
     _mock_gecko(httpx_mock)
 
-    resp = await client.get("/api/v1/rugcharts/ohlcv/solana/pair123")
+    resp = await client.get(f"/api/v1/rugcharts/ohlcv/solana/{SOLANA_PAIR_ADDRESS}")
     assert resp.status_code == 200
     summary = resp.json()["summary"]
 
@@ -143,22 +148,18 @@ async def test_ohlcv_empty_response(client: AsyncClient, httpx_mock):
     """OHLCV should handle empty GeckoTerminal response."""
     _mock_clickhouse_empty(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(
-            r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/.*/ohlcv/.*"
-        ),
+        url=re.compile(r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/.*/ohlcv/.*"),
         json={"data": {"attributes": {"ohlcv_list": []}}},
         status_code=200,
     )
     httpx_mock.add_response(
-        url=re.compile(
-            r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/[^/]+$"
-        ),
+        url=re.compile(r"https://api\.geckoterminal\.com/api/v2/networks/.*/pools/[^/]+$"),
         json=FAKE_PAIR_INFO,
         status_code=200,
         is_optional=True,
     )
 
-    resp = await client.get("/api/v1/rugcharts/ohlcv/ethereum/pair456")
+    resp = await client.get(f"/api/v1/rugcharts/ohlcv/ethereum/{ETH_PAIR_ADDRESS}")
     assert resp.status_code == 200
     data = resp.json()
     assert data["candles"] == []
@@ -216,3 +217,73 @@ async def test_intel_ta_with_sufficient_data(client: AsyncClient, httpx_mock):
     if ta:
         assert "sma_7" in ta or "sma20" in ta
         assert "rsi_14" in ta or "rsi14" in ta
+
+
+# ── SQLi guard tests (chain allowlist + pair address format) ─────────────
+
+
+@pytest.mark.asyncio
+async def test_ohlcv_rejects_unknown_chain(client: AsyncClient):
+    """Unknown chains must 400 before any SQL interpolation."""
+    resp = await client.get(f"/api/v1/rugcharts/ohlcv/notachain/{ETH_PAIR_ADDRESS}")
+    assert resp.status_code == 400
+    assert "chain" in resp.json()["detail"].lower()
+
+    # SQLi-style chain values must also be rejected
+    payload = quote("solana' OR '1'='1", safe="")
+    resp = await client.get(f"/api/v1/rugcharts/ohlcv/{payload}/{ETH_PAIR_ADDRESS}")
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_ohlcv_rejects_invalid_pair_address(client: AsyncClient):
+    """Non-address pair ids (incl. SQLi payloads) must 400."""
+    payloads = [
+        "pair123",
+        "0x' OR 1=1 --",
+        "0x; DROP TABLE dex_ohlcv_hourly; --",
+        "0x" + "z" * 40,  # non-hex chars
+        "A" * 20,  # too short for base58
+        "A" * 45,  # too long
+    ]
+    for payload in payloads:
+        resp = await client.get(f"/api/v1/rugcharts/ohlcv/solana/{quote(payload, safe='')}")
+        assert resp.status_code == 400, f"expected 400 for {payload!r}"
+
+
+def test_validate_chain_allowlist():
+    """Only chains in GECKO_NETWORKS pass validation."""
+    for chain in ("solana", "ethereum", "base", "bsc", "arbitrum", "tron", "polygon"):
+        _validate_chain(chain)  # must not raise
+
+    for chain in ("", "notachain", "solana' OR '1'='1", "ethereum; DROP"):
+        with pytest.raises(HTTPException) as exc:
+            _validate_chain(chain)
+        assert exc.value.status_code == 400
+
+
+def test_validate_pair_address_formats():
+    """Hex + base58 accepted; injection payloads rejected."""
+    _validate_pair_address("0x" + "a" * 40)  # EVM hex (lowercase)
+    _validate_pair_address("0x" + "A" * 40)  # EVM hex (uppercase)
+    _validate_pair_address("A" * 44)  # Solana base58
+    _validate_pair_address("T" + "A" * 33)  # Tron-style base58
+
+    bad = [
+        "",
+        "pair123",
+        "0x' OR 1=1 --",
+        "0x; DROP TABLE dex_ohlcv_hourly; --",
+        "0x" + "g" * 40,  # non-hex char
+        "0x" + "a" * 39,  # too short hex
+        "A" * 20,  # too short base58
+        "A" * 45,  # too long base58
+        "0" * 44,  # '0' is not in the base58 alphabet
+        "O" * 44,  # 'O' is not in the base58 alphabet
+        "l" * 44,  # 'l' is not in the base58 alphabet
+        "I" * 44,  # 'I' is not in the base58 alphabet
+    ]
+    for value in bad:
+        with pytest.raises(HTTPException) as exc:
+            _validate_pair_address(value)
+        assert exc.value.status_code == 400, f"expected 400 for {value!r}"
