@@ -1,0 +1,22 @@
+# covgate — per-diff coverage gates (https://github.com/jesse-black/covgate)
+# Enforced in CI (.forgejo/workflows/ci.yml, test job) against Istanbul JSON
+# produced by vitest. Only lines CHANGED vs origin/main are gated (ratchet).
+#
+# NOTE: this repo is marked ARCHIVED (see ARCHIVED.md — code merged into
+# rmi-backend / rmi-frontend). Gates kept for consistency until the repo is
+# formally retired.
+
+# Frontend application code — new/changed lines must be mostly covered.
+[[gates]]
+name = "frontend"
+include = ["frontend/src/**/*.ts", "frontend/src/**/*.tsx"]
+exclude = [
+    "frontend/src/**/*.test.*",
+    "frontend/src/**/*.spec.*",
+    "frontend/src/test/**",
+]
+fail-under-lines = 60
+
+# Fallback gate for any other changed files covered by the report.
+[[gates]]
+fail-under-lines = 50

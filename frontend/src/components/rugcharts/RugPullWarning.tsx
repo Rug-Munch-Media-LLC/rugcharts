@@ -12,6 +12,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { fetchRugChartsIntel, intelToRugWarnings } from '@/services/rugchartsApi'
 
 export interface RugWarning {
   id: string
@@ -107,25 +108,11 @@ export default function RugPullWarning({ chain, tokenAddress, initialWarnings, c
   const runScan = async () => {
     setScanning(true)
     try {
-      const res = await fetch(`/api/v1/rugmaps/rug-warning?chain=${chain}&token=${encodeURIComponent(tokenAddress)}`)
-      if (res.ok) {
-        const data = await res.json()
-        const raw = data.warnings || data.alerts || data.flags || []
-        setWarnings(
-          raw.map((w: any, i: number) => ({
-            id: w.id || String(i),
-            level: w.level || w.severity?.toUpperCase() || 'CAUTION',
-            category: w.category || w.type || 'trading',
-            title: w.title || w.summary || '',
-            description: w.description || w.detail || '',
-            evidence: w.evidence,
-            confidence: Number(w.confidence || w.score || 50),
-            detected_at: Number(w.detected_at || w.timestamp || Date.now() / 1000),
-            time_to_estimated_pull: w.time_to_estimated_pull || w.eta,
-            recommended_action: w.recommended_action || w.recommendation,
-          })),
-        )
-      }
+      // LIVE route /api/v1/rugcharts/intel via the typed layer (verified
+      // 2026-08-21). The old rugmaps "rug-warning" route never existed and
+      // 404'd silently. Real intel only — no warnings when intel has none.
+      const intel = await fetchRugChartsIntel(chain, tokenAddress)
+      setWarnings(intelToRugWarnings(intel) as RugWarning[])
     } catch (e) {
       console.error('[RugPullWarning] scan failed:', e)
     } finally {

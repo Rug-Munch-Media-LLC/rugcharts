@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { fetchRugChartsIntel, intelToRiskFactors } from '@/services/rugchartsApi'
 
 export interface RiskFactor {
   category: 'concentration' | 'liquidity' | 'contract' | 'social' | 'deployer' | 'trading' | 'holder'
@@ -116,26 +117,13 @@ export default function ScamRiskMeter({
       setLoading(false)
       return
     }
-    // Fetch from backend
+    // Fetch from backend — LIVE route /api/v1/rugcharts/intel/{chain}/{pair}
+    // via the typed layer (verified 2026-08-21). The old rugmaps "scan"
+    // query-param route never existed and 404'd silently.
     const fetchRisk = async () => {
       try {
-        const res = await fetch(`/api/v1/rugmaps/scan?token=${encodeURIComponent(tokenAddress)}&chain=${chain}`)
-        if (res.ok) {
-          const data = await res.json()
-          // Map backend flags to RiskFactor[]
-          const newFactors: RiskFactor[] = []
-          const flags = data.red_flags || data.flags || []
-          for (const flag of flags) {
-            newFactors.push({
-              category: flag.category || 'trading',
-              severity: flag.severity || 'medium',
-              title: flag.title || String(flag),
-              description: flag.description || '',
-              evidence: flag.evidence,
-            })
-          }
-          setFactors(newFactors)
-        }
+        const intel = await fetchRugChartsIntel(chain, tokenAddress)
+        setFactors(intelToRiskFactors(intel) as RiskFactor[])
       } catch (e) {
         console.error('[ScamRiskMeter] fetch failed:', e)
       } finally {

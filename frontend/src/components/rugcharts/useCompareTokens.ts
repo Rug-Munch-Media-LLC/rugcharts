@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { type ComparisonToken, computeWinnerScore } from './compare-tokens'
+import { fetchCompareAnalyze } from '@/services/rugchartsApi'
 
 export interface AnalyzeResponse {
   symbol?: string
@@ -44,14 +45,17 @@ export function useCompareTokens(initialTokens: ComparisonToken[]) {
 
   const perPage = 4
 
-  // Add token by chain+address
+  // Add token by chain+address — typed API layer (services/rugchartsApi.ts)
+  // targets /api/v1/rugcharts/analyze/{address} and returns null on any
+  // failure, so a dead backend degrades to "token not added" instead of
+  // throwing.
   const addToken = async (chain: string, address: string) => {
     if (!chain || !address) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/v1/rugcharts/analyze/${encodeURIComponent(address)}?chain=${chain}`)
-      if (res.ok) {
-        const data = (await res.json()) as AnalyzeResponse
+      const body = await fetchCompareAnalyze(address, chain)
+      if (body) {
+        const data = body as unknown as AnalyzeResponse
         const token: ComparisonToken = {
           chain,
           address,

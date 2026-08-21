@@ -79,7 +79,7 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
-  # ─── Test (Vitest) ───────────────────────────────────────────────────
+  # ─── Test (Vitest) + Coverage gates ─────────────────────────────────
   test:
     runs-on: docker-x64
     container:
@@ -89,6 +89,9 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: covgate diffs changed lines against origin/main.
+          fetch-depth: 0
       - name: Cache npm
         uses: actions/cache@v4
         with:
@@ -98,8 +101,46 @@ jobs:
             ${{ runner.os }}-npm-
       - name: Install dependencies
         run: npm ci --frozen-lockfile
-      - name: Run tests
-        run: npx vitest run
+      - name: Run tests with coverage (BLOCKING)
+        # Tests MUST pass. Coverage reporters: json (Istanbul format, consumed
+        # by covgate for the per-diff gate) + lcov (total-coverage floor below).
+        run: npx vitest run --coverage --coverage.reporter=json --coverage.reporter=lcov --coverage.reporter=text
+      - name: Check total coverage floor (30%)
+        run: |
+          node -e "
+          const fs = require('fs');
+          const t = fs.readFileSync('coverage/lcov.info', 'utf8');
+          let lf = 0, lh = 0;
+          for (const l of t.split('\n')) {
+            if (l.startsWith('LF:')) lf += Number(l.slice(3));
+            if (l.startsWith('LH:')) lh += Number(l.slice(3));
+          }
+          const pct = lf ? (lh / lf) * 100 : 0;
+          console.log('Total line coverage: ' + pct.toFixed(1) + '% (' + lh + '/' + lf + ')');
+          if (pct < 30) { console.error('Coverage below 30% floor'); process.exit(1); }
+          console.log('Coverage floor met');
+          "
+      - name: Install covgate
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
+          curl -fsSL https://github.com/jesse-black/covgate/releases/download/v0.2.0/covgate-v0.2.0-x86_64-unknown-linux-musl.tar.gz -o /tmp/covgate.tar.gz
+          echo "2b3e8aae7e26f584db9dec00cc70d27876dad929f3230fcd0a85f39e4a1f0e36 /tmp/covgate.tar.gz" | sha256sum -c
+          tar xzf /tmp/covgate.tar.gz -C /tmp
+          mv /tmp/covgate-v0.2.0-x86_64-unknown-linux-musl/covgate /usr/local/bin/covgate
+          covgate --version
+      - name: Per-diff coverage gate (covgate — BLOCKING)
+        # Ratchet: lines CHANGED vs origin/main must meet the gates declared
+        # in covgate.toml (repo root). On pushes to main the diff is empty
+        # and this passes trivially.
+        run: covgate check coverage/coverage-final.json --base origin/main
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            frontend/coverage/lcov.info
+            frontend/coverage/coverage-final.json
 
   # ─── Build ───────────────────────────────────────────────────────────
   build:
