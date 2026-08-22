@@ -19,7 +19,7 @@ jobs:
     container:
       image: node:22-bookworm-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: Install commitlint
@@ -44,7 +44,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Cache npm
         uses: actions/cache@v4
         with:
@@ -66,7 +66,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Cache npm
         uses: actions/cache@v4
         with:
@@ -88,7 +88,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # Full history: covgate diffs changed lines against origin/main.
           fetch-depth: 0
@@ -151,7 +151,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Cache npm
         uses: actions/cache@v4
         with:
@@ -170,7 +170,7 @@ jobs:
     container:
       image: node:22-bookworm-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: Install gitleaks
@@ -185,7 +185,7 @@ jobs:
     container:
       image: python:3.11-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: Install scanners
@@ -204,7 +204,7 @@ jobs:
     container:
       image: python:3.11-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: Noseyparker full-history secret hunt
