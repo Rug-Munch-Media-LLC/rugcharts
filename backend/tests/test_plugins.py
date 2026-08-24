@@ -58,14 +58,17 @@ def _mock_external(httpx_mock, helius_json=None):
         json=FAKE_GOPLUS,
         status_code=200,
     )
-    # Helius might not be called (depends on HELIUS_API_KEY env var)
-    if helius_json is not None:
-        httpx_mock.add_response(
-            url=re.compile(r"https://mainnet\.helius-rpc\.com/.*"),
-            json=helius_json,
-            status_code=200,
-            is_optional=True,
-        )
+    # Helius is called whenever HELIUS_API_KEY is set in the environment —
+    # always register an optional response so unmocked-request teardown
+    # assertions never fire (audit WIN-7: unit tests must not touch network).
+    if helius_json is None:
+        helius_json = {"jsonrpc": "2.0", "id": 1, "result": {"value": []}}
+    httpx_mock.add_response(
+        url=re.compile(r"https://mainnet\.helius-rpc\.com/.*"),
+        json=helius_json,
+        status_code=200,
+        is_optional=True,
+    )
 
 
 @pytest.mark.asyncio
@@ -95,7 +98,7 @@ async def test_plugins_all_returns_expected_shape(client: AsyncClient):
     for name in expected_plugins:
         assert name in data["plugins"], f"Missing plugin: {name}"
 
-    for name, plugin in data["plugins"].items():
+    for name, plugin in data["plugins"].items():  # noqa: B007 — name kept for symmetry
         assert "type" in plugin
         assert "title" in plugin
         assert "description" in plugin
@@ -167,7 +170,9 @@ async def test_plugins_all_chart_config_types(client: AsyncClient, httpx_mock):
     wf = plugins["wallet_flow"]
     assert "groups" in wf.get("chart_config", {})
     for g in wf["chart_config"]["groups"]:
-        assert "key" in g and "label" in g and "color" in g
+        assert "key" in g
+        assert "label" in g
+        assert "color" in g
 
     # risk_heatmap: chart_config.dimensions
     rh = plugins["risk_heatmap"]
@@ -177,24 +182,28 @@ async def test_plugins_all_chart_config_types(client: AsyncClient, httpx_mock):
     # wash_trading: chart_config.lines
     wt = plugins["wash_trading"]
     assert "lines" in wt.get("chart_config", {})
-    for l in wt["chart_config"]["lines"]:
-        assert "key" in l and "label" in l and "color" in l
+    for line in wt["chart_config"]["lines"]:
+        assert "key" in line
+        assert "label" in line
+        assert "color" in line
 
     # supply_donut: data items
     sd = plugins["supply_donut"]
     for item in sd["data"]:
-        assert "label" in item and "value" in item and "color" in item
+        assert "label" in item
+        assert "value" in item
+        assert "color" in item
 
 
 @pytest.mark.asyncio
-async def test_plugins_redis_caching(client: AsyncClient, httpx_mock, _mock_redis):
+async def test_plugins_redis_caching(client: AsyncClient, httpx_mock, _mock_redis):  # noqa: PT019
     """Plugins with token data should be cached."""
     _mock_external(httpx_mock, helius_json=None)
 
     resp1 = await client.get("/api/v1/rugcharts/plugins/all?token_address=abc123&chain=solana")
     assert resp1.status_code == 200
 
-    keys = [k for k in _mock_redis.keys("rugcharts:plugins:*")]
+    keys = list(_mock_redis.keys("rugcharts:plugins:*"))
     assert len(keys) >= 1
 
     # Without token, no cache (static)
@@ -210,7 +219,7 @@ async def test_plugins_static_without_token(client: AsyncClient):
     assert resp.status_code == 200
     plugins = resp.json()["plugins"]
 
-    for name, plugin in plugins.items():
+    for name, plugin in plugins.items():  # noqa: B007 — name kept for readability
         assert "meta" in plugin
         assert "icon" in plugin["meta"]
         assert "color" in plugin["meta"]

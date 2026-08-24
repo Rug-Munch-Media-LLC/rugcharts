@@ -3,12 +3,10 @@ Tests for GET /api/v1/rugcharts/analyze/{address}
 Verifies analysis response shape matching MultiChainCompare.tsx expectations.
 """
 
-import os
 import re
 
 import pytest
 from httpx import AsyncClient
-
 
 # Shared fake data
 FAKE_TOKEN_DEX = [
@@ -190,7 +188,7 @@ async def test_analyze_risk_score_calculation(client: AsyncClient, httpx_mock, m
 
 
 @pytest.mark.asyncio
-async def test_analyze_redis_caching(client: AsyncClient, httpx_mock, _mock_redis):
+async def test_analyze_redis_caching(client: AsyncClient, httpx_mock, _mock_redis):  # noqa: PT019
     """Analyze endpoint should cache results in Redis."""
     httpx_mock.add_response(
         url=re.compile(r"https://api\.dexscreener\.com/tokens/v1/.*"),
@@ -208,9 +206,16 @@ async def test_analyze_redis_caching(client: AsyncClient, httpx_mock, _mock_redi
         status_code=200,
         is_optional=True,
     )
+    # Holder estimate fires a Helius POST when HELIUS_API_KEY is set in env.
+    httpx_mock.add_response(
+        url=re.compile(r"https://mainnet\.helius-rpc\.com/.*"),
+        json={"jsonrpc": "2.0", "id": 1, "result": {"value": []}},
+        status_code=200,
+        is_optional=True,
+    )
 
     resp1 = await client.get("/api/v1/rugcharts/analyze/abc123?chain=solana")
     assert resp1.status_code == 200
 
-    keys = [k for k in _mock_redis.keys("rugcharts:analyze:*")]
+    keys = list(_mock_redis.keys("rugcharts:analyze:*"))
     assert len(keys) >= 1
