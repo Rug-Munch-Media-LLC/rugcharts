@@ -64,3 +64,7 @@ code paths, lint clean. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 ## License
 
 [MIT](./LICENSE) © Rug Munch Media LLC
+
+## FAQ
+
+See [docs/FAQ.md](docs/FAQ.md) for frequently asked questions.
