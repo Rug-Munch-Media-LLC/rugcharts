@@ -1,30 +1,66 @@
 # RugCharts
 
-> **NOTE: This repo is orphaned and on a merge-and-archive track into [rmi-backend](https://github.com/RugMunchMedia/rmi-backend). See [TRIAGE.md](TRIAGE.md).**
+**Real-time crypto charting engine — token charts, market data pipelines,
+and Telegram chart delivery.**
 
-Charting utilities for crypto token data. Originally part of the Rug Munch
-Intelligence platform. This code exists to preserve history during migration.
+RugCharts generates trading-style charts for any token: price action,
+liquidity, holder distribution — rendered server-side and delivered to the
+web app and directly inside Telegram. Part of the
+[Rug Munch](https://rugmunch.io) intelligence suite.
+
+| Layer   | Stack                                              |
+|---------|----------------------------------------------------|
+| Backend | Python · FastAPI · chart generator · DataBus feeds |
+| Frontend| React 19 · Vite · TypeScript                       |
+| Bot     | python-telegram-bot chart delivery                 |
+
+## Features
+
+- **Server-side chart generation** — consistent, shareable token charts
+- **Market data pipeline** — pluggable DataBus providers for prices/liquidity
+- **Telegram bot** — `/chart <token>` renders and ships charts in-chat
+- **REST API** — versioned endpoints under `/api`
+
+## Repository Layout
+
+```
+backend/    FastAPI service (app/main.py, chart_generator.py, databus/, telegram_bot/)
+frontend/   React + Vite chart UI (src/components, src/services)
+```
 
 ## Quick Start
 
-This repo is on a merge-and-archive track — there is no standalone runtime.
-The charting code is being migrated into [rmi-backend](https://github.com/RugMunchMedia/rmi-backend).
-
 ```bash
-# Browse the code
-git clone https://github.com/RugMunchMedia/rugcharts.git
-cd rugcharts
-# See TRIAGE.md for the merge plan
+# backend (port 8000)
+make install
+make dev            # = make dev-backend (uvicorn)
+
+# frontend
+cd frontend
+npm install
+npm run dev
 ```
+
+Run `make help` for all targets.
+
+## Configuration
+
+All provider keys and secrets are injected via environment variables at
+runtime — never committed. Copy `.env.example` names into your deployment
+secret store.
 
 ## Open-Core Model
 
-This repo is open source (MIT). The code here demonstrates charting patterns
-for crypto data. The RugMunch managed platform at rugmunch.io includes
-production charting infrastructure.
+This repository is open source (MIT): it demonstrates charting patterns for
+crypto market data. The managed platform at [rugmunch.io](https://rugmunch.io)
+runs the production charting infrastructure. See [OPEN-CORE.md](OPEN-CORE.md).
 
-See [OPEN-CORE.md](OPEN-CORE.md) for details.
+## Contributing
+
+Conventional commits (`feat(scope):`, `fix(scope):`, `docs:`), tests for new
+code paths, lint clean. See [CONTRIBUTING.md](CONTRIBUTING.md) and
+[AGENTS.md](AGENTS.md) for the agent contract.
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+[MIT](./LICENSE) © Rug Munch Media LLC
