@@ -1,0 +1,15 @@
+# RugCharts backend — test/runtime dependencies
+# Extracted from the working .venv (2026-08-25) — the repo previously had NO
+# dependency manifest, which is why backend tests never ran in CI.
+fastapi==0.141.1
+uvicorn>=0.30
+httpx==0.28.1
+redis==8.1.0
+pydantic==2.13.4
+
+# test
+pytest==9.1.1
+pytest-asyncio==1.4.0
+pytest-httpx==0.36.2
+fakeredis==2.37.0
+ruff==0.16.3

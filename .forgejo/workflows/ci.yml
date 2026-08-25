@@ -142,6 +142,27 @@ jobs:
             frontend/coverage/lcov.info
             frontend/coverage/coverage-final.json
 
+  # ─── Backend (pytest + ruff) ─────────────────────────────────────────
+  # Added 2026-08-25: backend tests existed but NEVER ran in CI — the test
+  # job above only covered the frontend. 29 tests, ~2s runtime.
+  backend:
+    runs-on: docker-x64
+    container:
+      image: python:3.12-slim
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install dependencies
+        run: |
+          pip install --no-cache-dir --upgrade pip
+          pip install --no-cache-dir -r requirements.txt
+      - name: Ruff lint
+        run: ruff check app tests
+      - name: Run backend tests (BLOCKING)
+        run: python -m pytest tests -q
+
   # ─── Build ───────────────────────────────────────────────────────────
   build:
     runs-on: docker-x64
