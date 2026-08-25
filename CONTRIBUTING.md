@@ -5,7 +5,7 @@ Copyright (c) 2026 Rug Munch Media LLC
 
 # Contributing to rugcharts
 
-> **NOTE: This repo is orphaned.** See [TRIAGE.md](TRIAGE.md). Code will be merged into `rmi-backend` and this repo archived. Contributions are limited to merge-related fixes and documentation.
+**Active product — contributions welcome!** Fork, branch, conventional commits, tests. See README for stack details.
 
 ## TL;DR
 
@@ -33,7 +33,7 @@ Single-tenant branch-PR pattern. `feat/*`, `fix/*`, `chore/*` merged to `main`.
 
 ### Commit Convention
 
-Conventional Commits. Keep changes minimal and surgical — this repo is on the merge-and-archive track.
+Conventional Commits. Keep changes focused; one logical change per PR.
 
 ## Remotes
 
