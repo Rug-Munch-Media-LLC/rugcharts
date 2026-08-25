@@ -8,14 +8,14 @@
 canonical · owner=crmuncher · last_updated=2026-07-06
 
 ## What This Repo Is
-rugcharts — orphaned component. See TRIAGE.md for disposition.
+rugcharts — ACTIVE product: real-time crypto charting engine (Rug Munch Media).
 
 ## Type
-`orphan` · decision=MERGE → `rmi-backend` then ARCHIVE
+`active-product` · owner=RugMunchMedia · featured OSS
 
 ## Where It Lives
 - Source: `https://github.com/RugMunchMedia/rugcharts`
-- Status: no live deployment (orphaned, merging into rmi-backend)
+- Status: live product under active development
 
 ## Built With
 - Standards: See the project documentation for development standards
@@ -24,12 +24,12 @@ rugcharts — orphaned component. See TRIAGE.md for disposition.
 
 ## 🚨 CRITICAL RULES
 
-1. **No new features.** This repo is on a merge-and-archive track. Add nothing that isn't a fix or a docs improvement.
+1. **Active development.** Feature work welcome — conventional commits + tests required.
 2. **No nested repos.** Don't commit other complete project trees inside this one.
 3. **No secrets.** Never commit `.secrets/`, `.env`, `*.pem`, `*.key`, `*.crt`.
 4. **No data blobs.** Don't commit `*.zip`, `*.parquet`, model weights, sqlite files.
 5. **Coordinate merges with rmi-backend.** When the merge happens, this repo will be archived on Forgejo.
-6. **Read TRIAGE.md before doing anything non-trivial.** The decision is final unless escalated.
+6. **Check docs/ and open issues before non-trivial changes.**
 
 ## Commands
 
@@ -37,7 +37,7 @@ There is no live build/test/dev cycle for this repo. It exists only to preserve 
 
 ## Status
 
-See [TRIAGE.md](TRIAGE.md) for the disposition decision.
+Status: active product — see README.md.
 
 ## Owners
 - Primary: crmuncher
@@ -49,7 +49,7 @@ See [TRIAGE.md](TRIAGE.md) for the disposition decision.
 
 ## Open-Core Protection
 
-This repo is open source (MIT) and on a merge-and-archive track. The code
+This repo is open source (MIT), actively developed. The code
 here demonstrates charting patterns — it is NOT the complete RugMunch
 production charting infrastructure. The managed platform at rugmunch.io
 includes proprietary enhancements.
