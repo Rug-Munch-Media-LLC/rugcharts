@@ -1,11 +1,12 @@
 # RugCharts
 
-> ⛔ **ARCHIVED / SUPERSEDED (2026-08-30) — production rugcharts code lives in
-> [`rmi-backend`](https://git.rugmunch.io/RugMunchMedia/rmi-backend)
-> (`app/routers/rugcharts/`, `app/databus/rugcharts_intel/`).** This standalone
-> repo was never deployed (no systemd unit, no nginx route — the
-> `rugcharts.rugmunch.io` vhost is an empty stub). Repo retained for history
-> pending lead sign-off on deletion. Do not develop, deploy, or file issues here.
+> ✅ **ACTIVE STANDALONE PRODUCT (2026-08-30).** RugCharts is a standalone
+> product: this repo carries its own chart engine + frontend, while the
+> production API that serves [rugcharts.rugmunch.io](https://rugcharts.rugmunch.io)
+> lives in [`rmi-backend`](https://git.rugmunch.io/RugMunchMedia/rmi-backend)
+> (`app/routers/rugcharts/` → `/api/v1/rugcharts/*`,
+> `app/databus/rugcharts_intel/` → 10 DataBus intelligence chains).
+> Develop, deploy, and file issues here.
 
 **Real-time crypto charting engine — token charts, market data pipelines,
 and Telegram chart delivery.**
