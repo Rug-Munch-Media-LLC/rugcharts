@@ -53,6 +53,25 @@ export default function LiveTradeTape({ chain, tokenAddress, initialTrades = [],
   const wsRef = useRef<WebSocket | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Sync externally-provided trades (e.g. from a polling hook) whenever they
+  // change. Without this, initialTrades is only read once at mount and live
+  // polling data would never appear.
+  useEffect(() => {
+    if (initialTrades.length > 0) {
+      setTrades((prev) => {
+        const merged = [...initialTrades, ...prev]
+        const seen = new Set<string>()
+        return merged
+          .filter((t) => {
+            if (seen.has(t.id)) return false
+            seen.add(t.id)
+            return true
+          })
+          .slice(0, 200)
+      })
+    }
+  }, [initialTrades])
+
   useEffect(() => {
     // Subscribe to DataBus WebSocket for live trades
     const wsUrl = (window as any).DATA_WS_URL || `wss://${window.location.host}/ws/trades`

@@ -102,6 +102,14 @@ export function compareAnalyzeUrl(address: string, chain = 'solana'): string {
   return `${API_BASE}/rugcharts/analyze/${encodeURIComponent(address)}?chain=${encodeURIComponent(chain)}`
 }
 
+export function signalsUrl(token: string, chain = 'solana'): string {
+  return `${API_BASE}/rugcharts/signals/${encodeURIComponent(token)}?chain=${encodeURIComponent(chain)}`
+}
+
+export function ohlcvUrlWithParams(chain: string, pairAddress: string, timeframe = '1h', limit = 100): string {
+  return `${API_BASE}/rugcharts/ohlcv/${encodeURIComponent(chain)}/${encodeURIComponent(pairAddress)}?timeframe=${encodeURIComponent(timeframe)}&limit=${limit}`
+}
+
 // ── Fetchers (mocked in tests; never throw) ─────────────────────────────
 
 async function getJson<T>(url: string): Promise<T | null> {
@@ -124,6 +132,105 @@ export function fetchRugmapsAnalyze(address: string, chain = 'solana'): Promise<
 
 export function fetchCompareAnalyze(address: string, chain = 'solana'): Promise<CompareAnalyzeResult | null> {
   return getJson<CompareAnalyzeResult>(compareAnalyzeUrl(address, chain))
+}
+
+// ── Trending / OHLCV / Signals (live routes) ────────────────────────────
+
+export interface TrendingToken {
+  address: string
+  name: string
+  symbol: string
+  chain: string
+  icon?: string
+  url?: string
+  source?: string
+  price_usd?: number
+  change_24h?: number
+  volume_24h?: number
+  liquidity_usd?: number
+  fdv?: number
+  dex?: string
+  pair_address?: string
+  buys_24h?: number
+  sells_24h?: number
+  makers?: number
+}
+
+export interface TrendingResult {
+  tokens: TrendingToken[]
+  count: number
+  chain: string
+  source: string
+}
+
+export interface OhlcvCandle {
+  time: number
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+export interface OhlcvResult {
+  candles: OhlcvCandle[]
+  summary: Record<string, number | string>
+  pair_info: Record<string, unknown>
+  authenticity: Record<string, unknown>
+  timeframe: string
+  chain: string
+}
+
+export interface SignalEntry {
+  id?: string
+  type?: string
+  signal_type?: string
+  timestamp?: number
+  time?: number
+  price_at_signal?: number
+  price?: number
+  confidence?: number
+  score?: number
+  title?: string
+  summary?: string
+  reasoning?: string
+  reason?: string
+  indicators?: string[]
+  indicator?: string
+  target_price?: number
+  target?: number
+  stop_loss?: number
+  stop?: number
+  timeframe?: string
+  horizon?: string
+  outcome?: string
+  actual_price?: number
+}
+
+export interface SignalsResult {
+  signals: SignalEntry[]
+  entries: SignalEntry[]
+  count: number
+  chain: string
+  token: string
+  current_price?: number
+}
+
+export function fetchTrending(chain = 'solana', limit = 30): Promise<TrendingResult | null> {
+  return getJson<TrendingResult>(`${trendingUrl()}?chain=${encodeURIComponent(chain)}&limit=${limit}`)
+}
+
+export function fetchOhlcv(
+  chain: string,
+  pairAddress: string,
+  timeframe = '1h',
+  limit = 100,
+): Promise<OhlcvResult | null> {
+  return getJson<OhlcvResult>(ohlcvUrlWithParams(chain, pairAddress, timeframe, limit))
+}
+
+export function fetchSignals(token: string, chain = 'solana'): Promise<SignalsResult | null> {
+  return getJson<SignalsResult>(signalsUrl(token, chain))
 }
 
 // ── Mappers: live intel payload → component shapes ──────────────────────
@@ -158,12 +265,14 @@ export function intelToRiskFactors(intel: RugChartsIntelResult | null): RiskFact
   const rug = intel?.data?.rug_score
   if (!rug || !Array.isArray(rug.factors)) return []
   const severity = severityFromRugLevel(rug.level)
-  return rug.factors.filter((f) => typeof f === 'string' && f.length > 0).map((title) => ({
-    category: categoryFromFactorText(title),
-    severity,
-    title,
-    description: `Rug score ${rug.score}/100 (${rug.level})`,
-  }))
+  return rug.factors
+    .filter((f) => typeof f === 'string' && f.length > 0)
+    .map((title) => ({
+      category: categoryFromFactorText(title),
+      severity,
+      title,
+      description: `Rug score ${rug.score}/100 (${rug.level})`,
+    }))
 }
 
 export interface RugWarningLike {
