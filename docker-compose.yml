@@ -1,0 +1,76 @@
+# rugcharts — Docker Compose
+# Backend (FastAPI :8000) + Frontend (nginx :8080)
+# Build: docker compose build
+# Start: docker compose up -d
+# Stop:  docker compose down
+
+services:
+  backend:
+    image: rugcharts-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rugcharts-backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      RAG_API_URL: ${RAG_API_URL:-http://localhost:8012}
+      CLICKHOUSE_HOST: ${CLICKHOUSE_HOST:-ch}
+      CLICKHOUSE_PORT: ${CLICKHOUSE_PORT:-8123}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-default}
+    read_only: true
+    tmpfs:
+      - /tmp:size=50M
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  frontend:
+    image: rugcharts-frontend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: rugcharts-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=50M
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
