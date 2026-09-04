@@ -536,7 +536,7 @@ async def _fetch_rag_threat_intel(token_address: str, chain: str = "solana") -> 
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     result = {
@@ -567,7 +567,7 @@ async def _fetch_rag_threat_intel(token_address: str, chain: str = "solana") -> 
             r = _r()
             r.setex(cache_key, 300, json.dumps(result))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return result

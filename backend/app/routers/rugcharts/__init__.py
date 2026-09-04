@@ -6,7 +6,7 @@ analyze, plugins) into a single ``router`` mounted at ``/api/v1/rugcharts``.
 
 from fastapi import APIRouter
 
-from ._common import _validate_chain, _validate_pair_address
+from ._common import _validate_chain, _validate_pair_address  # noqa: F401
 from .analyze import router as analyze_router
 from .intel import router as intel_router
 from .ohlcv import router as ohlcv_router

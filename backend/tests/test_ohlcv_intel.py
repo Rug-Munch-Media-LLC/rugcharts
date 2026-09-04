@@ -6,12 +6,15 @@ and GET /api/v1/rugcharts/intel/{chain}/{pair_address}
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import pytest
 from app.routers.rugcharts import _validate_chain, _validate_pair_address
 from fastapi import HTTPException
-from httpx import AsyncClient
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 # Valid pair address fixtures — must pass the SQLi guard (chain allowlist +
 # address format) used before the ClickHouse query is built:

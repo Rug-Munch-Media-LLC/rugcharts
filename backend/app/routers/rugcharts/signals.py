@@ -1,5 +1,6 @@
 """RugCharts signals sub-router."""
 
+import contextlib
 import json
 
 import httpx
@@ -29,7 +30,7 @@ async def _fetch_dexscreener_token(token_address: str, chain: str = "solana") ->
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     result = None
@@ -137,7 +138,7 @@ async def _fetch_dexscreener_token(token_address: str, chain: str = "solana") ->
             r = _r()
             r.setex(cache_key, CACHE_TTL, json.dumps(result))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return result
@@ -524,7 +525,7 @@ async def rugcharts_signals(
             data = json.loads(cached)
             return data
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     # Fetch token data
@@ -536,10 +537,8 @@ async def rugcharts_signals(
     candles: list[dict] = []
     pair_address = token_data.get("pair_address", "")
     if pair_address and chain in GECKO_NETWORKS:
-        try:
+        with contextlib.suppress(Exception):
             candles = await _fetch_ohlcv_gecko(pair_address, chain, "1h", 48)
-        except Exception:
-            pass
 
     # Compute signals
     signals = _compute_signals(token_data, candles)
@@ -557,7 +556,7 @@ async def rugcharts_signals(
         r = _r()
         r.setex(cache_key, CACHE_TTL, json.dumps(result))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return result

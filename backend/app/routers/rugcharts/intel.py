@@ -84,7 +84,7 @@ def _compute_rug_score(pair_info: dict, vol_auth: dict) -> dict:
             elif age_hours < 24:
                 score += 8
                 factors.append("New pool (<24h old)")
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     score = max(0, min(100, score))

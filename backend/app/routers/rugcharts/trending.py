@@ -25,7 +25,7 @@ async def _fetch_dexscreener_trending(chain: str, limit: int = 20) -> list[dict]
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     dex_chain = DEXSCREENER_CHAINS.get(chain, chain)
@@ -127,7 +127,7 @@ async def _fetch_dexscreener_trending(chain: str, limit: int = 20) -> list[dict]
                                             .get("makers", 0)
                                         )
                                         break
-                    except Exception:
+                    except Exception:  # noqa: S110
                         pass
 
     except Exception as e:
@@ -141,7 +141,7 @@ async def _fetch_dexscreener_trending(chain: str, limit: int = 20) -> list[dict]
             r = _r()
             r.setex(cache_key, CACHE_TTL, json.dumps(tokens))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return tokens

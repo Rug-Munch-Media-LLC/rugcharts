@@ -6,9 +6,12 @@ Verifies trending tokens endpoint returns sorted token data.
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
 import pytest
-from httpx import AsyncClient
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 FAKE_BOOSTED_TOKENS = [
     {
@@ -225,13 +228,11 @@ async def test_trending_sorted_by_volume(client: AsyncClient, httpx_mock):
     assert resp.status_code == 200
     data = resp.json()
     volumes = [t.get("volume_24h", 0) for t in data["tokens"]]
-    assert volumes == sorted(volumes, reverse=True), (
-        "Tokens should be sorted by volume descending"
-    )
+    assert volumes == sorted(volumes, reverse=True), "Tokens should be sorted by volume descending"
 
 
 @pytest.mark.asyncio
-async def test_trending_redis_cache(client: AsyncClient, httpx_mock, _mock_redis):
+async def test_trending_redis_cache(client: AsyncClient, httpx_mock, _mock_redis):  # noqa: PT019
     """Trending should cache results in Redis."""
     httpx_mock.add_response(
         url="https://api.dexscreener.com/token-boosts/top/v1",
@@ -257,5 +258,5 @@ async def test_trending_redis_cache(client: AsyncClient, httpx_mock, _mock_redis
     resp1 = await client.get("/api/v1/rugcharts/trending?chain=solana")
     assert resp1.status_code == 200
 
-    cache_keys = [k for k in _mock_redis.keys("rugcharts:trending:*")]
+    cache_keys = list(_mock_redis.keys("rugcharts:trending:*"))
     assert len(cache_keys) >= 1

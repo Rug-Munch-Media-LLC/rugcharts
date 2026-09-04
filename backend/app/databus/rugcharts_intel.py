@@ -79,7 +79,7 @@ async def smart_money_feed(chain: str = "solana", limit: int = 20, **kw) -> dict
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     smart_wallets = []
@@ -122,9 +122,7 @@ async def smart_money_feed(chain: str = "solana", limit: int = 20, **kw) -> dict
                                 {
                                     "address": addr,
                                     "balance_sol": round(amount, 2),
-                                    "estimated_usd": round(
-                                        amount * 150, 0
-                                    ),  # approximate
+                                    "estimated_usd": round(amount * 150, 0),  # approximate
                                     "signal": "large_holder",
                                 }
                             )
@@ -144,7 +142,7 @@ async def smart_money_feed(chain: str = "solana", limit: int = 20, **kw) -> dict
                         entity = ar.json().get("arkhamEntity", {})
                         w["entity"] = entity.get("name", "")
                         w["entity_type"] = entity.get("type", "")
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     result = {
@@ -159,7 +157,7 @@ async def smart_money_feed(chain: str = "solana", limit: int = 20, **kw) -> dict
         r = _r()
         r.setex(cache_key, CACHE_TTL["smart_money"], json.dumps(result, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return result
@@ -185,7 +183,7 @@ async def whale_alert_stream(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     whales = []
@@ -226,9 +224,7 @@ async def whale_alert_stream(
                             post = meta.get("postTokenBalances", [])
                             # Detect large balance changes
                             for pb, ab in zip(pre[:5], post[:5], strict=False):
-                                pre_amt = float(
-                                    pb.get("uiTokenAmount", {}).get("uiAmount", 0) or 0
-                                )
+                                pre_amt = float(pb.get("uiTokenAmount", {}).get("uiAmount", 0) or 0)
                                 post_amt = float(
                                     ab.get("uiTokenAmount", {}).get("uiAmount", 0) or 0
                                 )
@@ -260,7 +256,7 @@ async def whale_alert_stream(
         r = _r()
         r.setex(cache_key, CACHE_TTL["whale_alert"], json.dumps(result, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return result
@@ -271,9 +267,7 @@ async def whale_alert_stream(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def token_launch_scanner(
-    chain: str = "solana", limit: int = 50, **kw
-) -> dict | None:
+async def token_launch_scanner(chain: str = "solana", limit: int = 50, **kw) -> dict | None:
     """Scan for recently launched tokens and assign instant risk scores.
 
     Combines: age, liquidity, holder count, deployer history, GoPlus checks.
@@ -286,7 +280,7 @@ async def token_launch_scanner(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     new_tokens = []
@@ -379,7 +373,7 @@ async def token_launch_scanner(
         r = _r()
         r.setex(cache_key, CACHE_TTL["token_launch"], json.dumps(result, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return result
@@ -390,9 +384,7 @@ async def token_launch_scanner(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def insider_pattern_detector(
-    address: str = "", chain: str = "solana", **kw
-) -> dict | None:
+async def insider_pattern_detector(address: str = "", chain: str = "solana", **kw) -> dict | None:
     """Detect wallets that accumulated before major price movements.
 
     Pattern: large buys in the hours before a significant price increase.
@@ -408,7 +400,7 @@ async def insider_pattern_detector(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     api_key = kw.get("api_key", "") or HELIUS_KEY
@@ -449,9 +441,7 @@ async def insider_pattern_detector(
                     for window, tx_list in sorted(windows.items()):
                         if len(tx_list) > avg_tx_per_window * 3:  # 3x normal volume
                             # Check if price went up after this window
-                            next_windows = [
-                                w for w in windows if w > window and w <= window + 6
-                            ]
+                            next_windows = [w for w in windows if w > window and w <= window + 6]
                             for nw in next_windows:
                                 if len(windows[nw]) > avg_tx_per_window * 2:
                                     insider_signals.append(
@@ -462,8 +452,7 @@ async def insider_pattern_detector(
                                             "tx_count_spike": len(tx_list),
                                             "avg_tx_count": round(avg_tx_per_window, 1),
                                             "spike_multiplier": round(
-                                                len(tx_list)
-                                                / max(avg_tx_per_window, 1),
+                                                len(tx_list) / max(avg_tx_per_window, 1),
                                                 1,
                                             ),
                                             "followed_by_continued_volume": True,
@@ -493,7 +482,7 @@ async def insider_pattern_detector(
         r = _r()
         r.setex(cache_key, CACHE_TTL["insider"], json.dumps(result, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return result
@@ -504,9 +493,7 @@ async def insider_pattern_detector(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def liquidity_risk_monitor(
-    address: str = "", chain: str = "solana", **kw
-) -> dict | None:
+async def liquidity_risk_monitor(address: str = "", chain: str = "solana", **kw) -> dict | None:
     """Monitor liquidity pool health: LP lock, concentration, removal risk.
 
     Critical for rug pull prevention — the #1 thing degens need to check.
@@ -522,7 +509,7 @@ async def liquidity_risk_monitor(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     api_key = kw.get("api_key", "") or HELIUS_KEY
@@ -609,7 +596,7 @@ async def liquidity_risk_monitor(
                         if entity.get("name"):
                             h["entity"] = entity["name"]
                             h["entity_type"] = entity.get("type", "")
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     liquidity_data["token"] = address
@@ -619,11 +606,9 @@ async def liquidity_risk_monitor(
 
     try:
         r = _r()
-        r.setex(
-            cache_key, CACHE_TTL["liquidity"], json.dumps(liquidity_data, default=str)
-        )
+        r.setex(cache_key, CACHE_TTL["liquidity"], json.dumps(liquidity_data, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return liquidity_data
@@ -634,9 +619,7 @@ async def liquidity_risk_monitor(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def holder_health_score(
-    address: str = "", chain: str = "solana", **kw
-) -> dict | None:
+async def holder_health_score(address: str = "", chain: str = "solana", **kw) -> dict | None:
     """Analyze holder distribution for rug pull risk indicators.
 
     Metrics: Gini coefficient, top 10%, fresh wallets, whale dominance.
@@ -652,7 +635,7 @@ async def holder_health_score(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     api_key = kw.get("api_key", "") or HELIUS_KEY
@@ -688,9 +671,7 @@ async def holder_health_score(
                         return health
 
                     health["total_holders"] = len(holders)
-                    amounts = sorted(
-                        [float(h.get("amount", 0)) for h in holders], reverse=True
-                    )
+                    amounts = sorted([float(h.get("amount", 0)) for h in holders], reverse=True)
                     total = sum(amounts)
 
                     if total <= 0:
@@ -698,18 +679,14 @@ async def holder_health_score(
 
                     # Gini coefficient
                     n = len(amounts)
-                    gini = (2 * sum((i + 1) * amounts[i] for i in range(n))) / (
-                        n * total
-                    ) - (n + 1) / n
+                    gini = (2 * sum((i + 1) * amounts[i] for i in range(n))) / (n * total) - (
+                        n + 1
+                    ) / n
                     health["gini_coefficient"] = round(gini, 3)
 
                     # Top concentration
-                    health["top10_concentration"] = round(
-                        sum(amounts[:10]) / total * 100, 1
-                    )
-                    health["top1_dominance"] = (
-                        round(amounts[0] / total * 100, 1) if amounts else 0
-                    )
+                    health["top10_concentration"] = round(sum(amounts[:10]) / total * 100, 1)
+                    health["top1_dominance"] = round(amounts[0] / total * 100, 1) if amounts else 0
 
                     # Whale count (>1% supply)
                     health["whale_count"] = sum(1 for a in amounts if a / total > 0.01)
@@ -728,19 +705,13 @@ async def holder_health_score(
                     # Risk assessment
                     if gini > 0.8:
                         health["risk_level"] = "CRITICAL"
-                        health["risk_factors"].append(
-                            f"Extreme concentration (Gini={gini:.2f})"
-                        )
+                        health["risk_factors"].append(f"Extreme concentration (Gini={gini:.2f})")
                     elif gini > 0.6:
                         health["risk_level"] = "HIGH"
-                        health["risk_factors"].append(
-                            f"High concentration (Gini={gini:.2f})"
-                        )
+                        health["risk_factors"].append(f"High concentration (Gini={gini:.2f})")
                     elif gini > 0.4:
                         health["risk_level"] = "MEDIUM"
-                        health["risk_factors"].append(
-                            f"Moderate concentration (Gini={gini:.2f})"
-                        )
+                        health["risk_factors"].append(f"Moderate concentration (Gini={gini:.2f})")
                     else:
                         health["risk_level"] = "LOW"
 
@@ -775,7 +746,7 @@ async def holder_health_score(
         r = _r()
         r.setex(cache_key, CACHE_TTL["holder_health"], json.dumps(health, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return health
@@ -802,7 +773,7 @@ async def cross_chain_entity(address: str = "", **kw) -> dict | None:
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     if not ARKHAM_KEY:
@@ -866,7 +837,7 @@ async def cross_chain_entity(address: str = "", **kw) -> dict | None:
         r = _r()
         r.setex(cache_key, CACHE_TTL["cross_chain"], json.dumps(result, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return result
@@ -940,9 +911,7 @@ RUG_PATTERNS = [
 ]
 
 
-async def rug_pattern_matcher(
-    address: str = "", chain: str = "solana", **kw
-) -> dict | None:
+async def rug_pattern_matcher(address: str = "", chain: str = "solana", **kw) -> dict | None:
     """Match token characteristics against known rug pull patterns.
 
     Each pattern gets a similarity score. High matches = high rug probability.
@@ -958,7 +927,7 @@ async def rug_pattern_matcher(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     matches = []
@@ -1028,9 +997,7 @@ async def rug_pattern_matcher(
                 if r3.status_code == 200:
                     sigs = r3.json().get("result", [])
                     if sigs:
-                        age = int(time.time()) - sigs[0].get(
-                            "blockTime", int(time.time())
-                        )
+                        age = int(time.time()) - sigs[0].get("blockTime", int(time.time()))
                         signals["age_hours"] = age / 3600
 
         # Match against known patterns
@@ -1118,7 +1085,7 @@ async def rug_pattern_matcher(
         r = _r()
         r.setex(cache_key, CACHE_TTL["rug_pattern"], json.dumps(result, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return result
@@ -1129,9 +1096,7 @@ async def rug_pattern_matcher(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def developer_reputation(
-    address: str = "", chain: str = "solana", **kw
-) -> dict | None:
+async def developer_reputation(address: str = "", chain: str = "solana", **kw) -> dict | None:
     """Track deployer wallet history across all tokens they've created.
 
     Uses: Arkham entity + Helius transaction history + local token scanner data.
@@ -1147,7 +1112,7 @@ async def developer_reputation(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     api_key = kw.get("api_key", "") or HELIUS_KEY
@@ -1196,13 +1161,9 @@ async def developer_reputation(
                         reputation["total_transactions"] = len(sigs)
 
                         oldest = min(
-                            s.get("blockTime", float("inf"))
-                            for s in sigs
-                            if s.get("blockTime")
+                            s.get("blockTime", float("inf")) for s in sigs if s.get("blockTime")
                         )
-                        newest = max(
-                            s.get("blockTime", 0) for s in sigs if s.get("blockTime")
-                        )
+                        newest = max(s.get("blockTime", 0) for s in sigs if s.get("blockTime"))
                         if oldest < float("inf") and newest > 0:
                             reputation["first_seen"] = datetime.fromtimestamp(
                                 oldest, tz=UTC
@@ -1210,22 +1171,16 @@ async def developer_reputation(
                             reputation["last_active"] = datetime.fromtimestamp(
                                 newest, tz=UTC
                             ).isoformat()
-                            reputation["activity_span_days"] = round(
-                                (newest - oldest) / 86400, 1
-                            )
+                            reputation["activity_span_days"] = round((newest - oldest) / 86400, 1)
 
                         # Heuristic: many transactions to token programs = likely deployer
                         if len(sigs) > 500:
                             reputation["total_tokens_deployed"] = "10+"
-                            reputation["risk_factors"].append(
-                                "High-volume deployer (>500 txs)"
-                            )
+                            reputation["risk_factors"].append("High-volume deployer (>500 txs)")
                             reputation["risk_level"] = "HIGH"
                         elif len(sigs) > 100:
                             reputation["total_tokens_deployed"] = "5-10"
-                            reputation["risk_factors"].append(
-                                "Active deployer (>100 txs)"
-                            )
+                            reputation["risk_factors"].append("Active deployer (>100 txs)")
                             reputation["risk_level"] = "MEDIUM"
                         elif len(sigs) > 10:
                             reputation["total_tokens_deployed"] = "1-5"
@@ -1242,11 +1197,9 @@ async def developer_reputation(
 
     try:
         r = _r()
-        r.setex(
-            cache_key, CACHE_TTL["dev_reputation"], json.dumps(reputation, default=str)
-        )
+        r.setex(cache_key, CACHE_TTL["dev_reputation"], json.dumps(reputation, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return reputation
@@ -1451,9 +1404,7 @@ def _local_quick_authenticity_score(
 # ═══════════════════════════════════════════════════════════════════════
 
 
-async def instant_token_report(
-    address: str = "", chain: str = "solana", **kw
-) -> dict | None:
+async def instant_token_report(address: str = "", chain: str = "solana", **kw) -> dict | None:
     """Generate a complete intelligence report for any token in a single call.
 
     Combines: security scan, holder health, liquidity risk, volume authenticity,
@@ -1472,7 +1423,7 @@ async def instant_token_report(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     report = {
@@ -1526,9 +1477,7 @@ async def instant_token_report(
             liq_data = await liquidity_risk_monitor(address, chain, api_key=api_key)
             if liq_data:
                 report["sections"]["liquidity"] = {
-                    "concentration_risk": liq_data.get(
-                        "lp_concentration_risk", "unknown"
-                    ),
+                    "concentration_risk": liq_data.get("lp_concentration_risk", "unknown"),
                     "risk_score": liq_data.get("risk_score", 50),
                     "risk_level": liq_data.get("risk_level", "UNKNOWN"),
                     "lp_holders": len(liq_data.get("lp_holders", [])),
@@ -1607,7 +1556,7 @@ async def instant_token_report(
                     }
                     if entity["entity"].get("entity_name"):
                         risk_scores.append(5)  # Known entity = low risk
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         # ── Compute Overall Risk ──
@@ -1634,23 +1583,15 @@ async def instant_token_report(
         # Quick verdict
         sections = report["sections"]
         if sections.get("security", {}).get("band") == "DANGER":
-            report["quick_verdict"] = (
-                "EXTREME RISK — Multiple critical security failures detected"
-            )
+            report["quick_verdict"] = "EXTREME RISK — Multiple critical security failures detected"
         elif report["overall_risk"]["level"] == "CRITICAL":
             report["quick_verdict"] = "HIGH RISK — Multiple red flags. Not recommended."
         elif report["overall_risk"]["level"] == "HIGH":
-            report["quick_verdict"] = (
-                "ELEVATED RISK — Proceed with caution. Review details."
-            )
+            report["quick_verdict"] = "ELEVATED RISK — Proceed with caution. Review details."
         elif report["overall_risk"]["level"] == "MEDIUM":
-            report["quick_verdict"] = (
-                "MODERATE RISK — Standard for new tokens. Monitor closely."
-            )
+            report["quick_verdict"] = "MODERATE RISK — Standard for new tokens. Monitor closely."
         elif sections.get("entity", {}).get("name"):
-            report["quick_verdict"] = (
-                f"KNOWN ENTITY — {sections['entity']['name']}. Lower risk."
-            )
+            report["quick_verdict"] = f"KNOWN ENTITY — {sections['entity']['name']}. Lower risk."
         else:
             report["quick_verdict"] = "LOW RISK — No significant concerns detected."
 
@@ -1665,7 +1606,7 @@ async def instant_token_report(
         r = _r()
         r.setex(cache_key, CACHE_TTL["token_report"], json.dumps(report, default=str))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return report

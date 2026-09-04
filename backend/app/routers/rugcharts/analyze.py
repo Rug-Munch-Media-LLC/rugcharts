@@ -29,7 +29,7 @@ async def _fetch_goplus_security(address: str, chain: str = "solana") -> dict:
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     result: dict = {}
@@ -48,7 +48,7 @@ async def _fetch_goplus_security(address: str, chain: str = "solana") -> dict:
             r = _r()
             r.setex(cache_key, 600, json.dumps(result))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return result
@@ -64,7 +64,7 @@ async def _fetch_holder_estimate(token_address: str, chain: str = "solana") -> d
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     result = {"holder_count": 0, "top_holder_pct": 0, "holders": []}
@@ -115,7 +115,7 @@ async def _fetch_holder_estimate(token_address: str, chain: str = "solana") -> d
             r = _r()
             r.setex(cache_key, 600, json.dumps(result))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return result
@@ -136,7 +136,7 @@ async def rugcharts_analyze(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     # Fetch from DexScreener
@@ -282,7 +282,7 @@ async def rugcharts_analyze(
         r = _r()
         r.setex(cache_key, CACHE_TTL, json.dumps(result))
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     return result

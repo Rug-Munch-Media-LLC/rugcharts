@@ -44,7 +44,7 @@ async def _fetch_ohlcv_gecko(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     candles = []
@@ -80,7 +80,7 @@ async def _fetch_ohlcv_gecko(
             r = _r()
             r.setex(cache_key, OHLCV_TTL, json.dumps(candles))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return candles
@@ -97,7 +97,7 @@ async def _fetch_pair_info(pair_address: str, chain: str) -> dict:
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     info = {}
@@ -151,7 +151,7 @@ async def _fetch_pair_info(pair_address: str, chain: str) -> dict:
             r = _r()
             r.setex(cache_key, CACHE_TTL, json.dumps(info))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return info
@@ -293,7 +293,7 @@ async def _fetch_ohlcv_clickhouse(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     interval_min, lookback_hours = _timeframe_to_ch_params(timeframe)
@@ -357,7 +357,7 @@ async def _fetch_ohlcv_clickhouse(
                                 "volume": float(c["volume"]),
                             }
                         )
-                    except Exception:
+                    except Exception:  # noqa: S110
                         pass
     except Exception as e:
         logger.debug("ClickHouse OHLCV unavailable: %s", e)
@@ -367,7 +367,7 @@ async def _fetch_ohlcv_clickhouse(
             r = _r()
             r.setex(cache_key, CH_OHLCV_TTL, json.dumps(candles))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return candles

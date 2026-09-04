@@ -116,7 +116,9 @@ async def test_signals_returns_expected_shape(client: AsyncClient, httpx_mock):
 
         # Type must be one of the valid types
         sig_type = sig.get("type", sig.get("signal_type", "buy"))
-        assert sig_type in ("buy", "sell", "warning", "opportunity", "exit"), f"Invalid type: {sig_type}"
+        assert sig_type in ("buy", "sell", "warning", "opportunity", "exit"), (
+            f"Invalid type: {sig_type}"
+        )
 
         # Numeric values are valid
         if sig.get("confidence"):
@@ -190,7 +192,7 @@ async def test_signals_include_expected_signal_types(client: AsyncClient, httpx_
 
 
 @pytest.mark.asyncio
-async def test_signals_redis_caching(client: AsyncClient, httpx_mock, _mock_redis):
+async def test_signals_redis_caching(client: AsyncClient, httpx_mock, _mock_redis):  # noqa: PT019
     """First call should populate Redis cache; second call should use cache."""
     _mock_dexscreener(httpx_mock)
     _mock_gecko(httpx_mock)
@@ -200,7 +202,7 @@ async def test_signals_redis_caching(client: AsyncClient, httpx_mock, _mock_redi
     assert resp1.status_code == 200
 
     # Check cache was written
-    cache_keys = [k for k in _mock_redis.keys("rugcharts:signals:*")]
+    cache_keys = list(_mock_redis.keys("rugcharts:signals:*"))
     assert len(cache_keys) >= 1
 
     # Second call (should use cache)

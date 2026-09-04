@@ -53,4 +53,4 @@ async def client(app: FastAPI):
 def _clear_fake_redis(_mock_redis):
     """Clear fake Redis between tests."""
     _mock_redis.flushall()
-    yield
+    return

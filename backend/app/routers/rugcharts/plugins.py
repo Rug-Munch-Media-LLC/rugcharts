@@ -557,7 +557,7 @@ async def rugcharts_plugins_all(
             r.close()
             return json.loads(cached)
         r.close()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     plugins: dict[str, dict] = {}
@@ -663,7 +663,7 @@ async def rugcharts_plugins_all(
             r = _r()
             r.setex(cache_key, CACHE_TTL, json.dumps(result))
             r.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     return result
