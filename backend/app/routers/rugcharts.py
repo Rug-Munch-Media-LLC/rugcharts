@@ -35,17 +35,430 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 CACHE_TTL = 120  # 2 minutes for trending, 5 minutes for OHLCV
 OHLCV_TTL = 300
 
-# GeckoTerminal network mapping
-GECKO_NETWORKS = {
-    "solana": "solana",
-    "ethereum": "eth",
-    "base": "base",
-    "bsc": "bsc",
-    "arbitrum": "arbitrum",
-    "tron": "tron",
-    "polygon": "polygon_pos",
-    "avalanche": "avax",
-    "optimism": "optimism",
+# ── Chain configuration ─────────────────────────────────────────────────
+# Each supported chain carries:
+#   name             — human-readable display name
+#   chain_id         — EVM chain ID (int) for EVM chains, else None
+#   rpc_url          — optional public RPC endpoint (may be empty)
+#   dexscreener_id   — DexScreener chain identifier (api.dexscreener.com)
+#   geckoterminal_id — GeckoTerminal network identifier
+#   data_source      — "dexscreener" when no direct RPC is configured
+#                      (falls back to the DexScreener/GeckoTerminal APIs)
+CHAIN_CONFIG: dict[str, dict] = {
+    # ── Existing core chains ──
+    "solana": {
+        "name": "Solana",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "solana",
+        "geckoterminal_id": "solana",
+        "data_source": "dexscreener",
+    },
+    "ethereum": {
+        "name": "Ethereum",
+        "chain_id": 1,
+        "rpc_url": "",
+        "dexscreener_id": "ethereum",
+        "geckoterminal_id": "eth",
+        "data_source": "dexscreener",
+    },
+    "base": {
+        "name": "Base",
+        "chain_id": 8453,
+        "rpc_url": "",
+        "dexscreener_id": "base",
+        "geckoterminal_id": "base",
+        "data_source": "dexscreener",
+    },
+    "bsc": {
+        "name": "BNB Smart Chain",
+        "chain_id": 56,
+        "rpc_url": "",
+        "dexscreener_id": "bsc",
+        "geckoterminal_id": "bsc",
+        "data_source": "dexscreener",
+    },
+    "arbitrum": {
+        "name": "Arbitrum",
+        "chain_id": 42161,
+        "rpc_url": "",
+        "dexscreener_id": "arbitrum",
+        "geckoterminal_id": "arbitrum",
+        "data_source": "dexscreener",
+    },
+    "tron": {
+        "name": "Tron",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "tron",
+        "geckoterminal_id": "tron",
+        "data_source": "dexscreener",
+    },
+    "polygon": {
+        "name": "Polygon",
+        "chain_id": 137,
+        "rpc_url": "",
+        "dexscreener_id": "polygon",
+        "geckoterminal_id": "polygon_pos",
+        "data_source": "dexscreener",
+    },
+    "avalanche": {
+        "name": "Avalanche",
+        "chain_id": 43114,
+        "rpc_url": "",
+        "dexscreener_id": "avax",
+        "geckoterminal_id": "avax",
+        "data_source": "dexscreener",
+    },
+    "optimism": {
+        "name": "Optimism",
+        "chain_id": 10,
+        "rpc_url": "",
+        "dexscreener_id": "optimism",
+        "geckoterminal_id": "optimism",
+        "data_source": "dexscreener",
+    },
+    # ── New chains (50+) ──
+    "sui": {
+        "name": "Sui",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "sui",
+        "geckoterminal_id": "sui",
+        "data_source": "dexscreener",
+    },
+    "aptos": {
+        "name": "Aptos",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "aptos",
+        "geckoterminal_id": "aptos",
+        "data_source": "dexscreener",
+    },
+    "ton": {
+        "name": "TON",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "ton",
+        "geckoterminal_id": "ton",
+        "data_source": "dexscreener",
+    },
+    "sei": {
+        "name": "Sei",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "sei",
+        "geckoterminal_id": "sei",
+        "data_source": "dexscreener",
+    },
+    "movement": {
+        "name": "Movement",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "movement",
+        "geckoterminal_id": "movement",
+        "data_source": "dexscreener",
+    },
+    "hyperliquid": {
+        "name": "Hyperliquid",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "hyperliquid",
+        "geckoterminal_id": "hyperliquid",
+        "data_source": "dexscreener",
+    },
+    "injective": {
+        "name": "Injective",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "injective",
+        "geckoterminal_id": "injective",
+        "data_source": "dexscreener",
+    },
+    "celestia": {
+        "name": "Celestia",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "celestia",
+        "geckoterminal_id": "celestia",
+        "data_source": "dexscreener",
+    },
+    "near": {
+        "name": "Near",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "near",
+        "geckoterminal_id": "near",
+        "data_source": "dexscreener",
+    },
+    "flow": {
+        "name": "Flow",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "flow",
+        "geckoterminal_id": "flow",
+        "data_source": "dexscreener",
+    },
+    "cronos": {
+        "name": "Cronos",
+        "chain_id": 25,
+        "rpc_url": "",
+        "dexscreener_id": "cronos",
+        "geckoterminal_id": "cronos",
+        "data_source": "dexscreener",
+    },
+    "moonbeam": {
+        "name": "Moonbeam",
+        "chain_id": 1284,
+        "rpc_url": "",
+        "dexscreener_id": "moonbeam",
+        "geckoterminal_id": "moonbeam",
+        "data_source": "dexscreener",
+    },
+    "gnosis": {
+        "name": "Gnosis",
+        "chain_id": 100,
+        "rpc_url": "",
+        "dexscreener_id": "gnosis",
+        "geckoterminal_id": "gnosis",
+        "data_source": "dexscreener",
+    },
+    "fantom": {
+        "name": "Fantom",
+        "chain_id": 250,
+        "rpc_url": "",
+        "dexscreener_id": "fantom",
+        "geckoterminal_id": "fantom",
+        "data_source": "dexscreener",
+    },
+    "zksync": {
+        "name": "zkSync",
+        "chain_id": 324,
+        "rpc_url": "",
+        "dexscreener_id": "zksync",
+        "geckoterminal_id": "zksync",
+        "data_source": "dexscreener",
+    },
+    "linea": {
+        "name": "Linea",
+        "chain_id": 59144,
+        "rpc_url": "",
+        "dexscreener_id": "linea",
+        "geckoterminal_id": "linea",
+        "data_source": "dexscreener",
+    },
+    "scroll": {
+        "name": "Scroll",
+        "chain_id": 534352,
+        "rpc_url": "",
+        "dexscreener_id": "scroll",
+        "geckoterminal_id": "scroll",
+        "data_source": "dexscreener",
+    },
+    "mantle": {
+        "name": "Mantle",
+        "chain_id": 5000,
+        "rpc_url": "",
+        "dexscreener_id": "mantle",
+        "geckoterminal_id": "mantle",
+        "data_source": "dexscreener",
+    },
+    "blast": {
+        "name": "Blast",
+        "chain_id": 81457,
+        "rpc_url": "",
+        "dexscreener_id": "blast",
+        "geckoterminal_id": "blast",
+        "data_source": "dexscreener",
+    },
+    "celo": {
+        "name": "Celo",
+        "chain_id": 42220,
+        "rpc_url": "",
+        "dexscreener_id": "celo",
+        "geckoterminal_id": "celo",
+        "data_source": "dexscreener",
+    },
+    "aurora": {
+        "name": "Aurora",
+        "chain_id": 1313161554,
+        "rpc_url": "",
+        "dexscreener_id": "aurora",
+        "geckoterminal_id": "aurora",
+        "data_source": "dexscreener",
+    },
+    "oasis": {
+        "name": "Oasis",
+        "chain_id": 42262,
+        "rpc_url": "",
+        "dexscreener_id": "oasis",
+        "geckoterminal_id": "oasis",
+        "data_source": "dexscreener",
+    },
+    "kava": {
+        "name": "Kava",
+        "chain_id": 2222,
+        "rpc_url": "",
+        "dexscreener_id": "kava",
+        "geckoterminal_id": "kava",
+        "data_source": "dexscreener",
+    },
+    "canto": {
+        "name": "Canto",
+        "chain_id": 7700,
+        "rpc_url": "",
+        "dexscreener_id": "canto",
+        "geckoterminal_id": "canto",
+        "data_source": "dexscreener",
+    },
+    "velas": {
+        "name": "Velas",
+        "chain_id": 106,
+        "rpc_url": "",
+        "dexscreener_id": "velas",
+        "geckoterminal_id": "velas",
+        "data_source": "dexscreener",
+    },
+    "metis": {
+        "name": "Metis",
+        "chain_id": 1088,
+        "rpc_url": "",
+        "dexscreener_id": "metis",
+        "geckoterminal_id": "metis",
+        "data_source": "dexscreener",
+    },
+    "boba": {
+        "name": "Boba",
+        "chain_id": 288,
+        "rpc_url": "",
+        "dexscreener_id": "boba",
+        "geckoterminal_id": "boba",
+        "data_source": "dexscreener",
+    },
+    "moonriver": {
+        "name": "Moonriver",
+        "chain_id": 1285,
+        "rpc_url": "",
+        "dexscreener_id": "moonriver",
+        "geckoterminal_id": "moonriver",
+        "data_source": "dexscreener",
+    },
+    "astar": {
+        "name": "Astar",
+        "chain_id": 592,
+        "rpc_url": "",
+        "dexscreener_id": "astar",
+        "geckoterminal_id": "astar",
+        "data_source": "dexscreener",
+    },
+    "shiden": {
+        "name": "Shiden",
+        "chain_id": 336,
+        "rpc_url": "",
+        "dexscreener_id": "shiden",
+        "geckoterminal_id": "shiden",
+        "data_source": "dexscreener",
+    },
+    "energyweb": {
+        "name": "Energy Web",
+        "chain_id": 246,
+        "rpc_url": "",
+        "dexscreener_id": "energyweb",
+        "geckoterminal_id": "energyweb",
+        "data_source": "dexscreener",
+    },
+    "okxchain": {
+        "name": "OKX Chain",
+        "chain_id": 66,
+        "rpc_url": "",
+        "dexscreener_id": "okxchain",
+        "geckoterminal_id": "okxchain",
+        "data_source": "dexscreener",
+    },
+    "klaytn": {
+        "name": "Klaytn",
+        "chain_id": 8217,
+        "rpc_url": "",
+        "dexscreener_id": "klaytn",
+        "geckoterminal_id": "klaytn",
+        "data_source": "dexscreener",
+    },
+    "wemix": {
+        "name": "Wemix",
+        "chain_id": 1111,
+        "rpc_url": "",
+        "dexscreener_id": "wemix",
+        "geckoterminal_id": "wemix",
+        "data_source": "dexscreener",
+    },
+    "filecoin": {
+        "name": "Filecoin",
+        "chain_id": 314,
+        "rpc_url": "",
+        "dexscreener_id": "filecoin",
+        "geckoterminal_id": "filecoin",
+        "data_source": "dexscreener",
+    },
+    "hedera": {
+        "name": "Hedera",
+        "chain_id": 295,
+        "rpc_url": "",
+        "dexscreener_id": "hedera",
+        "geckoterminal_id": "hedera",
+        "data_source": "dexscreener",
+    },
+    "algorand": {
+        "name": "Algorand",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "algorand",
+        "geckoterminal_id": "algorand",
+        "data_source": "dexscreener",
+    },
+    "casper": {
+        "name": "Casper",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "casper",
+        "geckoterminal_id": "casper",
+        "data_source": "dexscreener",
+    },
+    "tezos": {
+        "name": "Tezos",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "tezos",
+        "geckoterminal_id": "tezos",
+        "data_source": "dexscreener",
+    },
+    "cardano": {
+        "name": "Cardano",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "cardano",
+        "geckoterminal_id": "cardano",
+        "data_source": "dexscreener",
+    },
+    "starknet": {
+        "name": "Starknet",
+        "chain_id": None,
+        "rpc_url": "",
+        "dexscreener_id": "starknet",
+        "geckoterminal_id": "starknet",
+        "data_source": "dexscreener",
+    },
+}
+
+# GeckoTerminal network mapping (chain -> geckoterminal_id), derived from
+# CHAIN_CONFIG so the allowlist and network lookups stay in sync.
+GECKO_NETWORKS = {name: cfg["geckoterminal_id"] for name, cfg in CHAIN_CONFIG.items()}
+
+# DexScreener chain mapping (chain -> dexscreener_id), derived from CHAIN_CONFIG.
+DEXSCREENER_CHAINS = {name: cfg["dexscreener_id"] for name, cfg in CHAIN_CONFIG.items()}
+
+# GoPlus chain-id mapping (chain -> EVM chain_id), derived from CHAIN_CONFIG.
+GOPLUS_CHAIN_IDS = {
+    name: str(cfg["chain_id"]) for name, cfg in CHAIN_CONFIG.items() if cfg["chain_id"]
 }
 
 # ── Input validation (SQL injection guards) ──────────────────────────────
@@ -128,15 +541,7 @@ async def _fetch_dexscreener_trending(chain: str, limit: int = 20) -> list[dict]
     except Exception:
         pass
 
-    chain_map = {
-        "solana": "solana",
-        "ethereum": "ethereum",
-        "base": "base",
-        "bsc": "bsc",
-        "arbitrum": "arbitrum",
-        "tron": "tron",
-    }
-    dex_chain = chain_map.get(chain, chain)
+    dex_chain = DEXSCREENER_CHAINS.get(chain, chain)
 
     tokens = []
     try:
@@ -848,7 +1253,7 @@ async def _fetch_ohlcv_clickhouse(
 
     try:
         async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.post(CLICKHOUSE_URL, data=ch_query, timeout=5)
+            resp = await client.post(CLICKHOUSE_URL, content=ch_query, timeout=5)
             if resp.status_code == 200 and resp.text.strip():
                 for row in resp.text.strip().split("\n"):
                     try:
@@ -934,15 +1339,7 @@ async def _fetch_rag_threat_intel(token_address: str, chain: str = "solana") -> 
 
 async def _fetch_dexscreener_token(token_address: str, chain: str = "solana") -> dict | None:
     """Fetch token info from DexScreener by address."""
-    chain_map = {
-        "solana": "solana",
-        "ethereum": "ethereum",
-        "base": "base",
-        "bsc": "bsc",
-        "arbitrum": "arbitrum",
-        "tron": "tron",
-    }
-    dex_chain = chain_map.get(chain, chain)
+    dex_chain = DEXSCREENER_CHAINS.get(chain, chain)
 
     cache_key = f"rugcharts:token:{chain}:{token_address}"
     try:
@@ -1491,17 +1888,7 @@ async def rugcharts_signals(
 
 async def _fetch_goplus_security(address: str, chain: str = "solana") -> dict:
     """Fetch token security data from GoPlus API."""
-    chain_id_map = {
-        "solana": "101",
-        "ethereum": "1",
-        "base": "8453",
-        "bsc": "56",
-        "arbitrum": "42161",
-        "polygon": "137",
-        "avalanche": "43114",
-        "optimism": "10",
-    }
-    cid = chain_id_map.get(chain, "101")
+    cid = GOPLUS_CHAIN_IDS.get(chain, "101")
 
     cache_key = f"rugcharts:goplus:{chain}:{address}"
     try:
@@ -2247,6 +2634,7 @@ def _build_plugin_token_health(token_address: str, token: dict, goplus: dict) ->
     )
 
     # Volume authenticity score
+    vol_liq = 0.0
     if vol_24h > 0 and liq > 0:
         vol_liq = vol_24h / liq
         vol_score = 100 if vol_liq < 10 else max(10, 100 - int(vol_liq * 2))
