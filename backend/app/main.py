@@ -16,6 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.routers.rugcharts import router as rugcharts_router
+from app.ws.trades import router as trades_ws_router
 
 logger = logging.getLogger("rugcharts")
 
@@ -44,6 +45,9 @@ app = FastAPI(
 
 app.include_router(rugcharts_router)
 logger.info("Mounted rugcharts_router at /api/v1/rugcharts/*")
+
+app.include_router(trades_ws_router)
+logger.info("Mounted trades_ws_router at /ws/trades/{chain}/{pair_address}")
 
 
 @app.get("/")
