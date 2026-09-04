@@ -4,21 +4,32 @@ Uses fakeredis for in-memory Redis mocking.
 Each test sets up its own httpx_mock responses for external APIs.
 """
 
+from contextlib import ExitStack
 from unittest.mock import patch
 
 import pytest
+from app.routers.rugcharts import router
 from fakeredis import FakeRedis
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-
-from app.routers.rugcharts import router
 
 
 @pytest.fixture(autouse=True)
 def _mock_redis():
     """Replace real Redis with fakeredis for all tests."""
     fake = FakeRedis(decode_responses=True)
-    with patch("app.routers.rugcharts._r", return_value=fake):
+    # Patch _r in every module that binds it (sub-routers + shared _common).
+    targets = [
+        "app.routers.rugcharts._common._r",
+        "app.routers.rugcharts.trending._r",
+        "app.routers.rugcharts.ohlcv._r",
+        "app.routers.rugcharts.signals._r",
+        "app.routers.rugcharts.analyze._r",
+        "app.routers.rugcharts.plugins._r",
+    ]
+    with ExitStack() as stack:
+        for target in targets:
+            stack.enter_context(patch(target, return_value=fake))
         yield fake
 
 

@@ -10,7 +10,6 @@ import re
 import pytest
 from httpx import AsyncClient
 
-
 FAKE_BOOSTED_TOKENS = [
     {
         "chainId": "solana",
