@@ -163,6 +163,23 @@ jobs:
       - name: Run backend tests (BLOCKING)
         run: python -m pytest tests -q
 
+  # ─── SAST (semgrep + bandit) ─────────────────────────────────────────
+  sast:
+    runs-on: docker-x64
+    container:
+      image: python:3.12-slim
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install scanners
+        run: pip install --no-cache-dir semgrep bandit
+      - name: Semgrep scan (BLOCKING on ERROR)
+        run: semgrep scan --config=auto --error --error-severity=ERROR app/
+      - name: Bandit scan (BLOCKING on medium+)
+        run: bandit -r app -x tests -ll
+
   # ─── Build ───────────────────────────────────────────────────────────
   build:
     runs-on: docker-x64
