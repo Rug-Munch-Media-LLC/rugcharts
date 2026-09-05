@@ -158,10 +158,16 @@ jobs:
         run: |
           pip install --no-cache-dir --upgrade pip
           pip install --no-cache-dir -r requirements.txt
+          pip install --no-cache-dir pytest-cov
       - name: Ruff lint
         run: ruff check app tests
       - name: Run backend tests (BLOCKING)
-        run: python -m pytest tests -q
+        run: python -m pytest tests -q --cov=app --cov-report=term-missing --cov-report=xml:coverage.xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage.xml
+          fail_ci_if_error: false
 
   # ─── SAST (semgrep + bandit) ─────────────────────────────────────────
   sast:
