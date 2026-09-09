@@ -372,3 +372,39 @@ jobs:
             registry.rugmunch.io/rugcharts:${{ github.sha }}
         env:
           COSIGN_EXPERIMENTAL: "1"
+
+  # ── Dependency vulnerability audit (pip-audit) ─────────────────
+  # Audits the DECLARED backend surface (backend/requirements.txt — pinned
+  # ==versions) without installing the tree. Findings are triaged by the
+  # maintainers and fixed via renovate bumps; do NOT silence with ignores.
+  pip-audit:
+    runs-on: docker-x64
+    needs: [backend]
+    container:
+      image: python:3.12-slim
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install pip-audit
+        run: pip install --no-cache-dir pip-audit
+      - name: Run pip-audit on declared deps (blocking on HIGH/CRITICAL)
+        run: pip-audit -r requirements.txt --fail-on=high --desc
+
+  # ── Dependency freshness (informational) ───────────────────────
+  deps-freshness:
+    runs-on: docker-x64
+    needs: [backend]
+    continue-on-error: true  # informational only for now
+    container:
+      image: python:3.12-slim
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Check dependency freshness
+        run: |
+          pip install --no-cache-dir libyear 2>/dev/null || true
+          libyear --file requirements.txt || echo "Dep freshness check noted (informational)"
