@@ -301,3 +301,74 @@ jobs:
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
           grype dir:. --fail-on critical || echo "::warning::critical vulns in tree"
+
+  # ── Container scanning (trivy) ────────────────────────────────────
+  trivy-scan:
+    runs-on: docker-x64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Trivy filesystem scan (BLOCKING on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+
+  # ── SBOM (CycloneDX) ─────────────────────────────────────────────
+  sbom:
+    runs-on: docker-x64
+    needs: [backend]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output: sbom.cyclonedx.json
+      - uses: actions/upload-artifact@v3
+        with:
+          name: sbom
+          path: sbom.cyclonedx.json
+
+  # ── Keyless image signing (Cosign) ────────────────────────────────
+  sign-image:
+    runs-on: docker-x64
+    needs: [backend]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: 'v2.4.3'
+      - name: Set up Docker BuildKit
+        run: |
+          echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+          echo "BUILDKIT_PROGRESS=plain" >> $GITHUB_ENV
+      - name: Pull build cache
+        run: docker pull registry.rugmunch.io/rugcharts:buildcache || echo "No cache image yet — building from scratch"
+      - name: Build Docker image with cache
+        run: |
+          docker build \
+            --cache-from registry.rugmunch.io/rugcharts:buildcache \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t registry.rugmunch.io/rugcharts:${{ github.sha }} \
+            .
+      - name: Push cache image
+        run: |
+          docker tag registry.rugmunch.io/rugcharts:${{ github.sha }} registry.rugmunch.io/rugcharts:buildcache
+          docker push registry.rugmunch.io/rugcharts:buildcache
+      - name: Push release image
+        run: docker push registry.rugmunch.io/rugcharts:${{ github.sha }}
+      - name: Sign image with keyless (OIDC)
+        run: cosign sign --yes registry.rugmunch.io/rugcharts:${{ github.sha }}
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+      - name: Verify signature
+        run: |
+          cosign verify \
+            --certificate-identity "https://git.rugmunch.io/RugMunchMedia/rugcharts/.forgejo/workflows/ci.yml@refs/heads/main" \
+            --certificate-oidc-issuer "https://git.rugmunch.io" \
+            registry.rugmunch.io/rugcharts:${{ github.sha }}
+        env:
+          COSIGN_EXPERIMENTAL: "1"
