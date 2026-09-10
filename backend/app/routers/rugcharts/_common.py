@@ -558,7 +558,7 @@ async def _fetch_rag_threat_intel(token_address: str, chain: str = "solana") -> 
             )
             if resp.status_code == 200:
                 result = resp.json()
-                result["source"] = "rmi-rag"
+                result["source"] = "rugbrain"
     except Exception as e:
         logger.debug("RAG threat intel unavailable: %s", e)
 

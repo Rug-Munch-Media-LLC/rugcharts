@@ -64,7 +64,7 @@ FAKE_RAG_RESPONSE = {
     "scam_risk": "unknown",
     "confidence": 0,
     "matches": [],
-    "source": "rmi-rag",
+    "source": "rugbrain",
 }
 
 
