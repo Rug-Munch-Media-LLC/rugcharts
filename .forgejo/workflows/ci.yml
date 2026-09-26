@@ -135,7 +135,7 @@ jobs:
         run: covgate check coverage/coverage-final.json --base origin/main
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: coverage-report
           path: |
@@ -243,7 +243,7 @@ jobs:
           k6 run tests/k6/smoke.js \
             -e BASE_URL=${{ vars.K6_TARGET_URL || 'https://charts.rugmunch.io' }} \
             --summary-export=tests/k6/results/smoke-summary.json
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v5.0.0
         if: always()
         with:
           name: k6-smoke-report
@@ -326,7 +326,7 @@ jobs:
         with:
           format: cyclonedx-json
           output: sbom.cyclonedx.json
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v5.0.0
         with:
           name: sbom
           path: sbom.cyclonedx.json
