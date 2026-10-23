@@ -45,8 +45,8 @@ def test_ws_trades_multiple_connections_share_poller():
         "app.ws.trades.fetch_latest_trades",
         new=AsyncMock(return_value=SAMPLE_TRADES),
     ):
-        client = TestClient(_app())
         with (
+            TestClient(_app()) as client,
             client.websocket_connect("/ws/trades/solana/pairX") as ws1,
             client.websocket_connect("/ws/trades/solana/pairX") as ws2,
         ):
