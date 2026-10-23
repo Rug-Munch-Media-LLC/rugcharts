@@ -7,6 +7,8 @@
 
 **Clone over Nostr:** `git clone nostr://npub1e97559tn2j6j02shalmn5x6xv5jt8ejlclh6sta8nln0n55whwtszyrqud/git.cryptorugmunch.com/rugcharts` (GRASP)
 
+> **Platform:** 21 networks (20 EVM-family chains incl. Tron, plus Solana) · ~422k labels · 283M indexed transfers (+628M internal) · 50+ security modules.
+
 > ✅ **ACTIVE STANDALONE PRODUCT (2026-08-30).** RugCharts is a standalone
 > product: this repo carries its own chart engine + frontend, while the
 > production API that serves [rugcharts.rugmunch.io](https://rugcharts.rugmunch.io)
