@@ -26,16 +26,15 @@ const LIVE_ALLOWLIST = [
 // but NOT in the running process until the next rmi-backend restart.
 // RE-VIEW after restart: probe these; on 200 move them to LIVE_ALLOWLIST.
 const PENDING_DEPLOY_ALLOWLIST = [
+  // Canonical trending board (contract: { items, generated_at }). Not live on
+  // every deployment yet — the client renders an explicit `unavailable` state.
+  '/api/v1/trending',
   '/api/v1/rugcharts/analyze/',
   '/api/v1/rugcharts/signals/',
   '/api/v1/rugcharts/ta/',
 ]
 
-const DEAD_PATHS = [
-  '/rugmaps/scan',
-  '/rugmaps/rug-warning',
-  '/rugcharts/plugins/all',
-]
+const DEAD_PATHS = ['/rugmaps/scan', '/rugmaps/rug-warning', '/rugcharts/plugins/all']
 
 function walk(dir: string): string[] {
   const out: string[] = []
@@ -69,8 +68,7 @@ describe('no fetches to dead endpoints', () => {
       const fetchUrls = [...src.matchAll(/fetch\(\s*[`'"]([^`'"]+)/g)].map((m) => m[1] ?? '')
       for (const url of fetchUrls) {
         if (!url.includes('/api/')) continue
-        const ok =
-          LIVE_ALLOWLIST.some((p) => url.includes(p)) || PENDING_DEPLOY_ALLOWLIST.some((p) => url.includes(p))
+        const ok = LIVE_ALLOWLIST.some((p) => url.includes(p)) || PENDING_DEPLOY_ALLOWLIST.some((p) => url.includes(p))
         expect(ok, `${rel}: fetch('${url}') is not a verified route — use services/rugchartsApi.ts`).toBe(true)
       }
     })
