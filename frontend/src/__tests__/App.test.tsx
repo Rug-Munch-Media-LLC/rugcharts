@@ -57,7 +57,7 @@ describe('App routing', () => {
     window.history.pushState({}, '', '/trending')
     window.dispatchEvent(new PopStateEvent('popstate'))
 
-    expect(await screen.findByText('Trending Pairs')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Trending' })).toBeInTheDocument()
   })
 
   it('renders the search page at /search', async () => {
@@ -99,7 +99,7 @@ describe('App routing', () => {
     window.history.pushState({}, '', '/trending')
     window.dispatchEvent(new PopStateEvent('popstate'))
 
-    expect(await screen.findByText('Trending Pairs')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Trending' })).toBeInTheDocument()
     // Layout header persists across routes.
     expect(screen.getByText('RugCharts')).toBeInTheDocument()
   })
