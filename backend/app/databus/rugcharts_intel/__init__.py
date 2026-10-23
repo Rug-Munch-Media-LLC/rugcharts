@@ -23,7 +23,7 @@ from .common import (
 from .ohlcv import instant_token_report, liquidity_risk_monitor
 from .signals import developer_reputation, insider_pattern_detector, rug_pattern_matcher
 from .trending import cross_chain_entity, holder_health_score, token_launch_scanner
-from .whales import smart_money_feed, whale_alert_stream
+from .whales import whale_alert_stream
 
 __all__ = [
     "ARKHAM_KEY",
@@ -46,7 +46,6 @@ __all__ = [
     "liquidity_risk_monitor",
     "logger",
     "rug_pattern_matcher",
-    "smart_money_feed",
     "token_launch_scanner",
     "whale_alert_stream",
 ]

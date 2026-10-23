@@ -18,7 +18,6 @@ ARKHAM_KEY = os.getenv("ARKHAM_API_KEY", "")
 MORALIS_KEY = os.getenv("MORALIS_API_KEY", "")
 
 CACHE_TTL = {
-    "smart_money": 300,
     "whale_alert": 60,
     "token_launch": 120,
     "insider": 600,
