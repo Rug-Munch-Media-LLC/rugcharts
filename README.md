@@ -1,87 +1,80 @@
-# RugCharts
+# rugcharts
 
-> Real-time crypto charting — token charts, market data pipelines and Telegram chart delivery.
+A small chart service: give it a token address, get a server-rendered price and
+liquidity chart plus a live trade stream over WebSocket. It exists so the main app
+does not have to embed a charting library or a provider SDK.
 
-**License:** [MIT](LICENSE) · **Canonical:** https://git.rugmunch.io/RugMunchMedia/rugcharts
-**Mirrors:** [GitHub](https://github.com/Rug-Munch-Media-LLC) · [GitLab](https://gitlab.com/rug-munch-media-group) · [Codeberg](https://codeberg.org/RugMunchMedia)
+**Status:** beta · **Licence:** MIT, see [LICENSE](LICENSE).
 
-**Clone over Nostr:** `git clone nostr://npub1e97559tn2j6j02shalmn5x6xv5jt8ejlclh6sta8nln0n55whwtszyrqud/git.cryptorugmunch.com/rugcharts` (GRASP)
+Canonical: https://git.rugmunch.io/RugMunchMedia/rugcharts
 
-> **Platform:** 21 networks (20 EVM-family chains incl. Tron, plus Solana) · ~422k labels · 283M indexed transfers (+628M internal) · 50+ security modules.
+## Quickstart
 
-> ✅ **ACTIVE STANDALONE PRODUCT (2026-08-30).** RugCharts is a standalone
-> product: this repo carries its own chart engine + frontend, while the
-> production API that serves [rugcharts.rugmunch.io](https://rugcharts.rugmunch.io)
-> lives in [`rmi-backend`](https://git.rugmunch.io/RugMunchMedia/rmi-backend)
-> (`app/routers/rugcharts/` → `/api/v1/rugcharts/*`,
-> `app/databus/rugcharts_intel/` → 10 DataBus intelligence chains).
-> Develop, deploy, and file issues here.
-
-**Real-time crypto charting engine — token charts, market data pipelines,
-and Telegram chart delivery.**
-
-RugCharts generates trading-style charts for any token: price action,
-liquidity, holder distribution — rendered server-side and delivered to the
-web app and directly inside Telegram. Part of the
-[Rug Munch](https://rugmunch.io) intelligence suite.
-
-| Layer   | Stack                                              |
-|---------|----------------------------------------------------|
-| Backend | Python · FastAPI · chart generator · DataBus feeds |
-| Frontend| React 19 · Vite · TypeScript                       |
-| Bot     | python-telegram-bot chart delivery                 |
-
-## Features
-
-- **Server-side chart generation** — consistent, shareable token charts
-- **Market data pipeline** — pluggable DataBus providers for prices/liquidity
-- **Telegram bot** — `/chart <token>` renders and ships charts in-chat
-- **REST API** — versioned endpoints under `/api`
-
-## Repository Layout
-
-```
-backend/    FastAPI service (app/main.py, chart_generator.py, databus/, telegram_bot/)
-frontend/   React + Vite chart UI (src/components, src/services)
-```
-
-## Quick Start
+Python 3.11+ for the backend; the frontend is static files, no bundler.
 
 ```bash
-# backend (port 8000)
-make install
-make dev            # = make dev-backend (uvicorn)
-
-# frontend
-cd frontend
-npm install
-npm run dev
+git clone https://git.rugmunch.io/RugMunchMedia/rugcharts.git
+cd rugcharts
+make install          # backend deps, editable
+make dev              # uvicorn on :8000
 ```
 
-Run `make help` for all targets.
+Serving the frontend alongside it:
+
+```bash
+make dev-frontend     # :5173, python -m http.server over frontend/
+```
+
+Compose builds both images:
+
+```bash
+docker compose up -d
+```
+
+Health check: `curl -s localhost:8000/health`.
+
+## What it does
+
+- **Chart generation.** `app/chart_generator.py` turns OHLCV rows into a rendered
+  chart payload; the caller gets an image/JSON, not a JS widget.
+- **Trade stream.** `app/ws/trades.py` pushes trades over WebSocket so the client
+  does not poll.
+- **Provider isolation.** `app/databus/` is the only place that talks to market
+  data providers; routers never call out directly.
+- **Static frontend.** No bundler, no framework — plain files served as-is, which
+  is why `build-frontend` is a placeholder rather than a build.
+
+## How it is put together
+
+```
+backend/app/
+  main.py            FastAPI app, health, lifespan
+  routers/rugcharts  chart endpoints
+  ws/trades          WebSocket trade feed
+  chart_generator    rendering
+  databus/           provider calls and caching
+frontend/            static HTML/JS/CSS
+```
 
 ## Configuration
 
-All provider keys and secrets are injected via environment variables at
-runtime — never committed. Copy `.env.example` names into your deployment
-secret store.
+There is no `.env.example`; configuration is read from the environment and
+compose passes it through.
 
-## Open-Core Model
+| Variable | Purpose |
+|---|---|
+| `PORT` | backend port, default 8000 |
+| `REDIS_URL` | optional cache for provider responses |
+| `CORS_ORIGINS` | allowed browser origins |
 
-This repository is open source (MIT): it demonstrates charting patterns for
-crypto market data. The managed platform at [rugmunch.io](https://rugmunch.io)
-runs the production charting infrastructure. See [OPEN-CORE.md](OPEN-CORE.md).
+## Known limits
 
-## Contributing
+- Rendering is CPU work on the request path. A burst of charts will queue.
+- Historical depth depends entirely on what the upstream provider returns; there
+  is no local OHLCV store.
+- The frontend is deliberately plain. If you need a full SPA, this is the wrong
+  repo.
 
-Conventional commits (`feat(scope):`, `fix(scope):`, `docs:`), tests for new
-code paths, lint clean. See [CONTRIBUTING.md](CONTRIBUTING.md) and
-[AGENTS.md](AGENTS.md) for the agent contract.
+## Licence
 
-## License
-
-[MIT](./LICENSE) © Rug Munch Media LLC
-
-## FAQ
-
-See [docs/FAQ.md](docs/FAQ.md) for frequently asked questions.
+MIT.
